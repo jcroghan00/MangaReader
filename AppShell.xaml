@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="MangaReader.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:MangaReader"
+    FlyoutBackgroundColor="#272727"
+    NavBarIsVisible="false">
+
+    <Shell.FlyoutHeader>
+        <Label Text="Manga Reader" />
+    </Shell.FlyoutHeader>
+
+
+    <FlyoutItem Title="Home">
+        <ShellContent 
+            ContentTemplate="{DataTemplate local:MainPage}"
+            Route="MainPage" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Search">
+        <ShellContent 
+            ContentTemplate="{DataTemplate local:MainPage}"
+            Route="MainPage" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Updates">
+        <ShellContent 
+            ContentTemplate="{DataTemplate local:MainPage}"
+            Route="MainPage" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Settings">
+        <ShellContent 
+            ContentTemplate="{DataTemplate local:MainPage}"
+            Route="MainPage" />
+    </FlyoutItem>
+</Shell>

@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MangaReader.MainPage"
+             BackgroundColor="#1e1e1e">
+
+    <ScrollView Padding="20, 10, 20, 10" MinimumWidthRequest="500">
+        <VerticalStackLayout MaximumWidthRequest="1500" Spacing="50">
+
+            <VerticalStackLayout >
+                <Label Text="Popular New Titles"/>
+                <Frame CornerRadius="10" Padding="0" BorderColor="#424242">
+                    <Grid x:Name="popularNewGrid" BackgroundColor="#424242" ColumnDefinitions="*, 4*" RowDefinitions="80, 40, *, 50" HeightRequest="500" Padding="20, 20, 20, 20" ColumnSpacing="20" RowSpacing="20">
+                        <Image x:Name="popularNewImage" HeightRequest="80" Grid.Column="0" Grid.Row="0" Grid.RowSpan="4" Source="loading.gif" IsAnimationPlaying="True" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        <Button x:Name="popularNewTitle" Text="Title" BackgroundColor="#424242" BorderColor="#424242" TextColor="White" HorizontalOptions="Start" VerticalOptions="Center" Grid.Column="1" Grid.Row="0"/>
+                        <HorizontalStackLayout x:Name="popularNewTags" BackgroundColor="Red" Grid.Column="1" Grid.Row="1" Spacing="15" MaximumHeightRequest="30">
+                            <Button VerticalOptions="Center" Padding="10,0,10,0" Text="Tag1" BackgroundColor="#1e1e1e" TextColor="White"/>
+                            <Label Padding="5, 5, 5, 5" Text="Tag2" BackgroundColor="#1e1e1e"/>
+                        </HorizontalStackLayout>
+                        <Label x:Name="popularNewDescription" Text="Description" Grid.Column="1" Grid.Row="2"/>
+                        <Button x:Name="popularNewAuthor" Text="Author" TextColor="White" BackgroundColor="#424242" BorderColor="#424242" Grid.Column="1" Grid.Row="3"/>
+                    </Grid>
+                </Frame>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout>
+                <Label Text="Latest Updates"/>
+                <Label BackgroundColor="Red" HeightRequest="500"/>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout>
+                <Label Text="Seasonal"/>
+                <Label BackgroundColor="Blue" HeightRequest="500"/>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout>
+                <Label Text="Recently Added"/>
+                <Label BackgroundColor="Orange" HeightRequest="500"/>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
