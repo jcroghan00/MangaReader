@@ -11,14 +11,22 @@
                 <Label Text="Popular New Titles" Margin="0, 0, 0, 10" FontSize="40"/>
                 <Frame CornerRadius="10" Padding="0" BorderColor="#424242">
                     <Grid x:Name="popularNewGrid" BackgroundColor="#424242" ColumnDefinitions="*, 4*" RowDefinitions="80, Auto, *, 50" HeightRequest="500" Padding="20, 20, 20, 20" ColumnSpacing="20" RowSpacing="20">
-                        <Image x:Name="popularNewImage" HeightRequest="80" Grid.Column="0" Grid.Row="0" Grid.RowSpan="4" Source="loading.gif" IsAnimationPlaying="True" HorizontalOptions="Center" VerticalOptions="Center"/>
-                        <Button x:Name="popularNewTitle" Text="Title" BackgroundColor="#424242" BorderColor="#424242" TextColor="White" HorizontalOptions="Start" VerticalOptions="Center" Grid.Column="1" Grid.Row="0" FontSize="30"/>
-                        <HorizontalStackLayout x:Name="popularNewTags" Grid.Column="1" Grid.Row="1" Spacing="15" Margin="15,0,0,0">
-                            <Button VerticalOptions="Center" BorderWidth="0" Padding="10,0,10,0" Text="Tag1" BackgroundColor="#1e1e1e" TextColor="White" HeightRequest="20"/>
-                            <Button VerticalOptions="Center" BorderWidth="0" Padding="10,0,10,0" Text="Tag2" BackgroundColor="#1e1e1e" TextColor="White" HeightRequest="30"/>
-                        </HorizontalStackLayout>
-                        <Label x:Name="popularNewDescription" Text="Description" Grid.Column="1" Grid.Row="2" Margin="15,0,0,0"/>
-                        <Button x:Name="popularNewAuthor" Text="Author" TextColor="White" BackgroundColor="#424242" BorderColor="#424242" Grid.Column="1" Grid.Row="3" HorizontalOptions="Start" VerticalOptions="Center"/>
+                        <Image x:Name="popularNewImage" Grid.Column="0" Grid.Row="0" Grid.RowSpan="4" Source="no_image.png" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        <Label x:Name="popularNewTitle" Text="Title" HorizontalOptions="Start" VerticalOptions="Center" Grid.Column="1" Grid.Row="0" FontSize="30" LineBreakMode="TailTruncation">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="test"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <HorizontalStackLayout x:Name="popularNewTags" Grid.Column="1" Grid.Row="1" Spacing="15"></HorizontalStackLayout>
+                        <Label x:Name="popularNewDescription" Grid.Column="1" Grid.Row="2" Text="No Description" FontSize="16"/>
+                        <Grid Grid.Column="1" Grid.Row="3" ColumnDefinitions="*, 150" RowDefinitions="*" >
+                            <Button x:Name="popularNewAuthor" Grid.Column="0" TextColor="White" BackgroundColor="#424242" BorderColor="#424242" HorizontalOptions="Start" VerticalOptions="Center"/>
+                            <Grid ColumnDefinitions="Auto, *, Auto" RowDefinitions="50" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center" WidthRequest="150">
+                                <Button Grid.Row="0" Grid.Column="0" VerticalOptions="Center" BorderWidth="0" Margin="10, 0, 10, 0" Padding="10,0,10,0" Text="&lt;" BackgroundColor="#1e1e1e" TextColor="White" HeightRequest="20" Clicked="scrollPopularNewLeft"/>
+                                <Label Grid.Row="0" Grid.Column="1" x:Name="popularNewPageNumber" Text="#" HorizontalOptions="Center" VerticalOptions="Center" FontSize="16"/>
+                                <Button Grid.Row="0" Grid.Column="2" VerticalOptions="Center" BorderWidth="0" Margin="10, 0, 10, 0" Padding="10,0,10,0" Text="&gt;" BackgroundColor="#1e1e1e" TextColor="White" HeightRequest="30" Clicked="scrollPopularNewRight"/>
+                            </Grid>
+                        </Grid>
                     </Grid>
                 </Frame>
             </VerticalStackLayout>
