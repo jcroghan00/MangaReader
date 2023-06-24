@@ -8,33 +8,33 @@
         <VerticalStackLayout MaximumWidthRequest="1500" Spacing="50">
 
             <VerticalStackLayout >
-                <Label Text="Popular New Titles"/>
+                <Label Text="Popular New Titles" Margin="0, 0, 0, 10" FontSize="40"/>
                 <Frame CornerRadius="10" Padding="0" BorderColor="#424242">
-                    <Grid x:Name="popularNewGrid" BackgroundColor="#424242" ColumnDefinitions="*, 4*" RowDefinitions="80, 40, *, 50" HeightRequest="500" Padding="20, 20, 20, 20" ColumnSpacing="20" RowSpacing="20">
+                    <Grid x:Name="popularNewGrid" BackgroundColor="#424242" ColumnDefinitions="*, 4*" RowDefinitions="80, Auto, *, 50" HeightRequest="500" Padding="20, 20, 20, 20" ColumnSpacing="20" RowSpacing="20">
                         <Image x:Name="popularNewImage" HeightRequest="80" Grid.Column="0" Grid.Row="0" Grid.RowSpan="4" Source="loading.gif" IsAnimationPlaying="True" HorizontalOptions="Center" VerticalOptions="Center"/>
-                        <Button x:Name="popularNewTitle" Text="Title" BackgroundColor="#424242" BorderColor="#424242" TextColor="White" HorizontalOptions="Start" VerticalOptions="Center" Grid.Column="1" Grid.Row="0"/>
-                        <HorizontalStackLayout x:Name="popularNewTags" BackgroundColor="Red" Grid.Column="1" Grid.Row="1" Spacing="15" MaximumHeightRequest="30">
-                            <Button VerticalOptions="Center" Padding="10,0,10,0" Text="Tag1" BackgroundColor="#1e1e1e" TextColor="White"/>
-                            <Label Padding="5, 5, 5, 5" Text="Tag2" BackgroundColor="#1e1e1e"/>
+                        <Button x:Name="popularNewTitle" Text="Title" BackgroundColor="#424242" BorderColor="#424242" TextColor="White" HorizontalOptions="Start" VerticalOptions="Center" Grid.Column="1" Grid.Row="0" FontSize="30"/>
+                        <HorizontalStackLayout x:Name="popularNewTags" Grid.Column="1" Grid.Row="1" Spacing="15" Margin="15,0,0,0">
+                            <Button VerticalOptions="Center" BorderWidth="0" Padding="10,0,10,0" Text="Tag1" BackgroundColor="#1e1e1e" TextColor="White" HeightRequest="20"/>
+                            <Button VerticalOptions="Center" BorderWidth="0" Padding="10,0,10,0" Text="Tag2" BackgroundColor="#1e1e1e" TextColor="White" HeightRequest="30"/>
                         </HorizontalStackLayout>
-                        <Label x:Name="popularNewDescription" Text="Description" Grid.Column="1" Grid.Row="2"/>
-                        <Button x:Name="popularNewAuthor" Text="Author" TextColor="White" BackgroundColor="#424242" BorderColor="#424242" Grid.Column="1" Grid.Row="3"/>
+                        <Label x:Name="popularNewDescription" Text="Description" Grid.Column="1" Grid.Row="2" Margin="15,0,0,0"/>
+                        <Button x:Name="popularNewAuthor" Text="Author" TextColor="White" BackgroundColor="#424242" BorderColor="#424242" Grid.Column="1" Grid.Row="3" HorizontalOptions="Start" VerticalOptions="Center"/>
                     </Grid>
                 </Frame>
             </VerticalStackLayout>
 
             <VerticalStackLayout>
-                <Label Text="Latest Updates"/>
+                <Label Text="Latest Updates" Margin="0, 0, 0, 10" FontSize="30"/>
                 <Label BackgroundColor="Red" HeightRequest="500"/>
             </VerticalStackLayout>
 
             <VerticalStackLayout>
-                <Label Text="Seasonal"/>
+                <Label Text="Seasonal" Margin="0, 0, 0, 10" FontSize="30"/>
                 <Label BackgroundColor="Blue" HeightRequest="500"/>
             </VerticalStackLayout>
 
             <VerticalStackLayout>
-                <Label Text="Recently Added"/>
+                <Label Text="Recently Added" Margin="0, 0, 0, 10" FontSize="30"/>
                 <Label BackgroundColor="Orange" HeightRequest="500"/>
             </VerticalStackLayout>
         </VerticalStackLayout>
