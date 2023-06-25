@@ -48,7 +48,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Remove="Resources\Images\loading.gif" />
 	  <None Remove="Resources\Images\manga_test.jpg" />
 	  <None Remove="Resources\Images\no_image.png" />
 	</ItemGroup>
