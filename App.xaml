@@ -9,6 +9,11 @@
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <Color x:Key="bgColor">#1e1e1e</Color>
+            <Color x:Key="fgColor">#424242</Color>
+            <Color x:Key="hlColor">#292929</Color>
+            <Color x:Key="suggestiveBgColor">#ffa412</Color>
+            <Color x:Key="eroticaBgColor">#ad0c0c</Color>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

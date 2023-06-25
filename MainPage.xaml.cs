@@ -3,6 +3,7 @@
 using Flurl;
 using Microsoft.Maui.Controls.Shapes;
 using System.Text.Json.Nodes;
+using System.Xml.Linq;
 
 public partial class MainPage : ContentPage
 {
@@ -12,26 +13,34 @@ public partial class MainPage : ContentPage
 	static string coverBaseUrl = "https://uploads.mangadex.org/covers/";
 
     private JsonNode popularNewManga;
-
+    private byte[][] popularNewImages;
 
     public MainPage()
 	{
 		InitializeComponent();
 
+        popularNewImages = new byte[10][];
+
 		getPopularNew();
+        getNewReleases();
 	}
 
-	private async void getPopularNew()
+    private async void getPopularNew()
 	{
         var dt = DateTime.Now;
         dt = dt.AddDays(-14);
 
-		var url = baseUrl
-			.AppendPathSegment("manga")
-			.SetQueryParam("includes[]", new[] { "manga", "cover_art", "author", "artist" })
-			.SetQueryParam("contentRating[]", new[] { "suggestive", "safe" })
-			.SetQueryParam("createdAtSince", dt.ToString("yyyy-MM-ddTHH:mm:ss"));
+        // Used Flurl for Url building since it was difficult to fill in the rather complex queries that
+        // mangadex expects with c#s default Url building
+        var url = baseUrl
+            .AppendPathSegment("manga")
+            .SetQueryParam("includes[]", new[] { "manga", "cover_art", "author", "artist" })
+            .SetQueryParam("contentRating[]", new[] { "safe", "suggestive" })
+            .SetQueryParam("createdAtSince", dt.ToString("yyyy-MM-ddTHH:mm:ss"))
+            .SetQueryParam("availableTranslatedLanguage[]", "en");
 
+        // This kinda sucks but it will be how I have to do orderings here and in the future since mangadex
+        // expects an object as a parameter and both Flurl and c# don't make that easy
 		baseUrl += "order%5BfollowedCount%5D=desc";
 
         HttpRequestMessage msg = new HttpRequestMessage(HttpMethod.Get, url);
@@ -63,10 +72,22 @@ public partial class MainPage : ContentPage
             popularNewIndex = 0;
         }
 
+        // Retrieve stored image data
+        if (popularNewImages[popularNewIndex] != null)
+        {
+            popularNewImage.Source = ImageSource.FromStream(() => new MemoryStream(popularNewImages[popularNewIndex]));
+        }
+        else
+        {
+            popularNewImage.Source = "no_image.png";
+        }
+
+        // Clear old info
         popularNewTags.Children.Clear();
+        popularNewAuthorStack.Children.Clear();
+
         popularNewPageNumber.Text = (popularNewIndex + 1).ToString();
         popularNewTitle.Text = popularNewManga[popularNewIndex]["attributes"]["title"]["en"].ToString();
-        popularNewImage.Source = "no_image.png";
 
         if (popularNewManga[popularNewIndex]["attributes"]["description"].ToString() == "{}")
         {
@@ -76,16 +97,40 @@ public partial class MainPage : ContentPage
         {
             popularNewDescription.Text = popularNewManga[popularNewIndex]["attributes"]["description"]["en"].ToString();
         }
-        
-        List<string> authors = new List<string>();
+
         string coverFileName = "";
         var relations = popularNewManga[popularNewIndex]["relationships"].AsArray();
 
+        Label authorLabel = new Label();
+        // Filters through manga relations to get the authors/artists and cover art id
         for (int i = 0; i < relations.Count(); i++)
         {
-            if (relations[i]["type"].ToString() == "author" || relations[i]["type"].ToString() == "artist")
+            
+            if (relations[i]["type"].ToString() == "author")
             {
-                authors.Add(relations[i]["attributes"]["name"].ToString());
+                if (authorLabel.Text != null)
+                {
+                    authorLabel = new Label
+                    {
+                        Text = ", " + relations[i]["attributes"]["name"].ToString(),
+                        Margin = new Thickness(0, 0, 0, 0),
+                        VerticalOptions = LayoutOptions.Start
+                    };
+                }
+                else
+                {
+                    authorLabel = new Label
+                    {
+                        Text = relations[i]["attributes"]["name"].ToString(),
+                        Margin = new Thickness(0, 0, 0, 0),
+                        VerticalOptions = LayoutOptions.Start
+                    };
+                }
+                popularNewAuthorStack.Add(authorLabel);
+            }
+            else if (relations[i]["type"].ToString() == "artist")
+            {
+                newArtist(relations[i]["attributes"]["name"].ToString(), authorLabel);
             }
             else if (relations[i]["type"].ToString() == "cover_art")
             {
@@ -93,45 +138,77 @@ public partial class MainPage : ContentPage
             }
         }
 
-        popularNewAuthor.Text = authors.FirstOrDefault();
-
         var tags = popularNewManga[popularNewIndex]["attributes"]["tags"].AsArray();
 
+        if (popularNewManga[popularNewIndex]["attributes"]["contentRating"].ToString() != "safe")
+        {
+            Border newTag = makeNewTag(popularNewManga[popularNewIndex]["attributes"]["contentRating"].ToString());
+            popularNewTags.Add(newTag);
+        }
+
+        // Create all tags for the manga
         for (int i = 0; i < tags.Count(); i++)
         {
             Border newTag = makeNewTag(tags[i]["attributes"]["name"]["en"].ToString());
             popularNewTags.Add(newTag);
         }
 
-        var coverUrl = $"{coverBaseUrl}{popularNewManga[popularNewIndex]["id"]}/{coverFileName}.256.jpg";
-        popularNewImage.Source = coverUrl;
+        // Get new image data
+        if (popularNewImages[popularNewIndex] == null)
+        {
+            var coverUrl = $"{coverBaseUrl}{popularNewManga[popularNewIndex]["id"]}/{coverFileName}.512.jpg";
+            var byteArray = client.GetByteArrayAsync(coverUrl).Result;
+
+            popularNewImages[popularNewIndex] = byteArray;
+            popularNewImage.Source = ImageSource.FromStream(() => new MemoryStream(popularNewImages[popularNewIndex]));
+        }
     }
 
-    /*
-    <Border BackgroundColor = "#1e1e1e" Stroke="#1e1e1e" Padding="15,5,15,5" StrokeShape="RoundRectangle 10">
-        <Label VerticalOptions = "Center" Text="Tag1" HeightRequest="20"/>
-    </Border>
-    <Border BackgroundColor = "#1e1e1e" Stroke="#1e1e1e" Padding="15,5,15,5" StrokeShape="RoundRectangle 10" VerticalOptions = "Center">
-        <Label Text="Tag2" HeightRequest="20"/>
-    </Border>
-    */
+    private async void getNewReleases()
+    {
+        return;
+    }
 
     private Border makeNewTag(string tag)
     {
-        RoundRectangle rectangle = new RoundRectangle();
-        rectangle.CornerRadius = 10;
+        string text = tag;
+        Color backgroundColor = (Color) App.Current.Resources["hlColor"];
+
+        if (tag == "suggestive" || tag == "erotica")
+        {
+            text = tag[0].ToString().ToUpper() + tag.Substring(1);
+            backgroundColor = (Color)App.Current.Resources[tag + "BgColor"];
+        }
 
         Border border = new Border
         {
-            BackgroundColor = Color.FromArgb("#1e1e1e"),
-            Stroke = Color.FromArgb("#1e1e1e"),
-            StrokeThickness = 5,
-            Padding = new Thickness(15, 5, 15, 5),
-            StrokeShape = rectangle,
-            Content = new Label { Text = tag }
+            BackgroundColor = backgroundColor,
+            Stroke = backgroundColor,
+            StrokeThickness = 1,
+            StrokeShape = new RoundRectangle
+            {
+                CornerRadius = 10
+            },
+            Content = new Label { Text = text, Margin = new Thickness(15, 5, 15, 5) }
         };
 
         return border;
+    }
+
+    private void newArtist(string name, Label author)
+    {
+        if (name == author.Text)
+        {
+            return;
+        }
+
+        Label label = new Label
+        {
+            Text = ", " + name,
+            Margin = new Thickness(0, 0, 0, 0),
+            VerticalOptions = LayoutOptions.Start
+        };
+        popularNewAuthorStack.Add(label);
     }
 
     private void scrollPopularNewRight(object sender, EventArgs e)

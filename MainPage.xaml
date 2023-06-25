@@ -2,48 +2,82 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="MangaReader.MainPage"
-             BackgroundColor="#1e1e1e">
+             BackgroundColor="{DynamicResource bgColor}">
 
     <ScrollView Padding="20, 10, 20, 10" MinimumWidthRequest="500">
         <VerticalStackLayout MaximumWidthRequest="1500" Spacing="50">
 
-            <VerticalStackLayout >
+            <!-- Popular New Manga -->
+            <VerticalStackLayout>
                 <Label Text="Popular New Titles" Margin="0, 0, 0, 10" FontSize="40"/>
-                <Frame CornerRadius="10" Padding="0" BorderColor="#424242">
-                    <Grid x:Name="popularNewGrid" BackgroundColor="#424242" ColumnDefinitions="*, 4*" RowDefinitions="80, Auto, *, 50" HeightRequest="500" Padding="20, 20, 20, 20" ColumnSpacing="20" RowSpacing="20">
-                        <Image x:Name="popularNewImage" Grid.Column="0" Grid.Row="0" Grid.RowSpan="4" Source="no_image.png" HorizontalOptions="Center" VerticalOptions="Center"/>
+                <Frame CornerRadius="10" Padding="0" BorderColor="{DynamicResource fgColor}">
+                    <Grid BackgroundColor="{DynamicResource fgColor}" ColumnDefinitions="*, 4*" RowDefinitions="80, Auto, *, 50" HeightRequest="500" Padding="20, 10, 20, 10" ColumnSpacing="20" RowSpacing="20">
+                        <Border StrokeShape="RoundRectangle 5" Stroke="{DynamicResource fgColor}" Grid.Column="0" Grid.Row="0" Grid.RowSpan="4" HorizontalOptions="Center" VerticalOptions="Center">
+                            <Image x:Name="popularNewImage" Source="no_image.png" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Border>
                         <Label x:Name="popularNewTitle" Text="Title" HorizontalOptions="Start" VerticalOptions="Center" Grid.Column="1" Grid.Row="0" FontSize="30" LineBreakMode="TailTruncation">
                             <Label.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="test"/>
                             </Label.GestureRecognizers>
                         </Label>
-                        <HorizontalStackLayout x:Name="popularNewTags" Grid.Column="1" Grid.Row="1" Spacing="15"></HorizontalStackLayout>
-                        <Label x:Name="popularNewDescription" Grid.Column="1" Grid.Row="2" Text="No Description" FontSize="16"/>
+                        <ScrollView Orientation="Horizontal" Grid.Column="1" Grid.Row="1" >
+                            <HorizontalStackLayout x:Name="popularNewTags" Spacing="15"></HorizontalStackLayout>
+                        </ScrollView>
+                        <ScrollView Grid.Column="1" Grid.Row="2" >
+                            <Label x:Name="popularNewDescription" Text="No Description" FontSize="16"/>
+                        </ScrollView>
                         <Grid Grid.Column="1" Grid.Row="3" ColumnDefinitions="*, 150" RowDefinitions="*" >
-                            <Button x:Name="popularNewAuthor" Grid.Column="0" TextColor="White" BackgroundColor="#424242" BorderColor="#424242" HorizontalOptions="Start" VerticalOptions="Center"/>
+                            <HorizontalStackLayout x:Name="popularNewAuthorStack" Grid.Column="0" HorizontalOptions="Start" VerticalOptions="Center"/>
                             <Grid ColumnDefinitions="Auto, *, Auto" RowDefinitions="50" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center" WidthRequest="150">
-                                <Button Grid.Row="0" Grid.Column="0" VerticalOptions="Center" BorderWidth="0" Margin="10, 0, 10, 0" Padding="10,0,10,0" Text="&lt;" BackgroundColor="#1e1e1e" TextColor="White" HeightRequest="20" Clicked="scrollPopularNewLeft"/>
+                                <Button Grid.Row="0" Grid.Column="0" VerticalOptions="Center" BorderWidth="0" Margin="10, 0, 10, 0" Padding="10,0,10,0" Text="&lt;" BackgroundColor="{DynamicResource hlColor}" TextColor="White" HeightRequest="20" Clicked="scrollPopularNewLeft"/>
                                 <Label Grid.Row="0" Grid.Column="1" x:Name="popularNewPageNumber" Text="#" HorizontalOptions="Center" VerticalOptions="Center" FontSize="16"/>
-                                <Button Grid.Row="0" Grid.Column="2" VerticalOptions="Center" BorderWidth="0" Margin="10, 0, 10, 0" Padding="10,0,10,0" Text="&gt;" BackgroundColor="#1e1e1e" TextColor="White" HeightRequest="30" Clicked="scrollPopularNewRight"/>
+                                <Button Grid.Row="0" Grid.Column="2" VerticalOptions="Center" BorderWidth="0" Margin="10, 0, 10, 0" Padding="10,0,10,0" Text="&gt;" BackgroundColor="{DynamicResource hlColor}" TextColor="White" HeightRequest="30" Clicked="scrollPopularNewRight"/>
                             </Grid>
                         </Grid>
                     </Grid>
                 </Frame>
             </VerticalStackLayout>
 
+            <!-- New Chapter Releases -->
             <VerticalStackLayout>
                 <Label Text="Latest Updates" Margin="0, 0, 0, 10" FontSize="30"/>
-                <Label BackgroundColor="Red" HeightRequest="500"/>
+                <Frame CornerRadius="10" Padding="0" BackgroundColor="{DynamicResource fgColor}" BorderColor="{DynamicResource fgColor}">
+                    <Grid BackgroundColor="{DynamicResource fgColor}" ColumnDefinitions="*, *, *" ColumnSpacing="20" RowDefinitions="*" HeightRequest="600" Padding="30, 15, 30, 15">
+                        <Border StrokeShape="RoundRectangle 5" Stroke="{DynamicResource hlColor}" Grid.Column="0">
+                            <VerticalStackLayout BackgroundColor="{DynamicResource hlColor}" Grid.Column="0"/>
+                        </Border>
+                        <Border StrokeShape="RoundRectangle 5" Stroke="{DynamicResource hlColor}" Grid.Column="1">
+                            <VerticalStackLayout BackgroundColor="{DynamicResource hlColor}" Grid.Column="1"/>
+                        </Border>
+                        <Border StrokeShape="RoundRectangle 5" Stroke="{DynamicResource hlColor}" Grid.Column="2">
+                            <VerticalStackLayout BackgroundColor="{DynamicResource hlColor}" Grid.Column="2"/>
+                        </Border>
+                    </Grid>
+                </Frame>
             </VerticalStackLayout>
 
+            <!-- Seasonal Manga -->
             <VerticalStackLayout>
                 <Label Text="Seasonal" Margin="0, 0, 0, 10" FontSize="30"/>
-                <Label BackgroundColor="Blue" HeightRequest="500"/>
+                <Frame CornerRadius="10" Padding="0" BackgroundColor="{DynamicResource fgColor}" BorderColor="{DynamicResource fgColor}">
+                    <Border StrokeShape="RoundRectangle 5" Stroke="{DynamicResource hlColor}">
+                        <ScrollView Orientation="Horizontal" Margin="30, 15, 30 ,15" HeightRequest="300" BackgroundColor="{DynamicResource hlColor}">
+                            <HorizontalStackLayout/>
+                        </ScrollView>
+                    </Border>
+                </Frame>
             </VerticalStackLayout>
 
+            <!-- Recently Added -->
             <VerticalStackLayout>
                 <Label Text="Recently Added" Margin="0, 0, 0, 10" FontSize="30"/>
-                <Label BackgroundColor="Orange" HeightRequest="500"/>
+                <Frame CornerRadius="10" Padding="0" BackgroundColor="{DynamicResource fgColor}" BorderColor="{DynamicResource fgColor}">
+                    <Border StrokeShape="RoundRectangle 5" Stroke="{DynamicResource hlColor}">
+                        <ScrollView Orientation="Horizontal" Margin="30, 15, 30 ,15" HeightRequest="300" BackgroundColor="{DynamicResource hlColor}">
+                            <HorizontalStackLayout/>
+                        </ScrollView>
+                    </Border>
+                </Frame>
             </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>
