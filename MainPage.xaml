@@ -17,14 +17,14 @@
                         </Border>
                         <Label x:Name="popularNewTitle" Text="No Title" HorizontalOptions="Start" VerticalOptions="Center" Grid.Column="1" Grid.Row="0" FontSize="30" FontAttributes="Bold" LineBreakMode="TailTruncation">
                             <Label.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="test"/>
+                                <TapGestureRecognizer Tapped="toMangaPage"/>
                             </Label.GestureRecognizers>
                         </Label>
                         <ScrollView Orientation="Horizontal" Grid.Column="1" Grid.Row="1" Padding="0, 0, 0, 15" >
                             <HorizontalStackLayout x:Name="popularNewTags" Spacing="15"/>
                         </ScrollView>
                         <ScrollView Grid.Column="1" Grid.Row="2" >
-                            <Label x:Name="popularNewDescription" Text="No Description" FontSize="16"/>
+                            <Label x:Name="popularNewDescription" Text="No Description" FontSize="16" LineBreakMode="WordWrap"/>
                         </ScrollView>
                         <Grid Grid.Column="1" Grid.Row="3" ColumnDefinitions="*, 150" RowDefinitions="*" >
                             <HorizontalStackLayout x:Name="popularNewAuthorStack" Grid.Column="0" HorizontalOptions="Start" VerticalOptions="Center"/>
