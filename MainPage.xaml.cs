@@ -405,6 +405,7 @@ public partial class MainPage : ContentPage
 
             var coverFileName = getCoverByMangaId(mangaId);
 
+            // Sets the image to one that shows no image was retrieved or to the url for the cover image
             var imageSource = ImageSource.FromFile("no_image.png");
             if (coverFileName != "")
             {
