@@ -6,23 +6,30 @@
 
     <ScrollView BackgroundColor="{DynamicResource bgColor}">
         <VerticalStackLayout Margin="10, 50, 10, 50" MaximumWidthRequest="1500" Spacing="50">
+            
+            <!-- Upper Page Info -->
             <Grid HeightRequest="500" ColumnDefinitions="*, 4*" RowDefinitions="Auto, *, 2*, .2*" RowSpacing="10" ColumnSpacing="10">
                 <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" VerticalOptions="Center" HorizontalOptions="Center" StrokeShape="RoundRectangle 5" StrokeThickness="0" Stroke="{DynamicResource bgColor}" BackgroundColor="{DynamicResource bgColor}">
-                    <Image Source="manga_test.jpg"/>
+                    <Image x:Name="mangaCover"/>
                 </Border>
-                <Label Margin="0, 15, 0, 0"  Grid.Column="1" Grid.Row="0" Text="Manga Title" FontAttributes="Bold" FontSize="30"/>
-                <Label FontSize="14" Text="Author" Grid.Column="1" Grid.Row="1"/>
-                <FlexLayout Margin="0, 0, 0, 25" Grid.Column="1" Grid.Row="2" Wrap="Wrap" Direction="Row" AlignContent="Start"/>
-                <HorizontalStackLayout Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="2" HorizontalOptions="Center" Spacing="20">
-                    <Label Text="☆ Score" FontSize="16"/>
-                    <Label Text="Publication Date" FontSize="16"/>
+                <Label x:Name="mangaTitle"  Margin="0, 15, 0, 0"  Grid.Column="1" Grid.Row="0" FontAttributes="Bold" FontSize="30"/>
+                <HorizontalStackLayout x:Name="authorStack" Grid.Column="1" Grid.Row="1"/>
+                <FlexLayout x:Name="mangaTags" Margin="0, 0, 0, 25" Grid.Column="1" Grid.Row="2" Wrap="Wrap" Direction="Row" AlignItems="Start"/>
+                <HorizontalStackLayout Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="2" HorizontalOptions="Center" VerticalOptions="Center" Spacing="20">
+                    <Label x:Name="mangaScore" Text="☆ Score" FontSize="16"/>
+                    <Label x:Name="mangaPublicationStatus" Text="Publication Date" FontSize="16"/>
                 </HorizontalStackLayout>
-                
             </Grid>
+            
+            <!-- Description Box -->
             <Frame CornerRadius="10" BackgroundColor="{DynamicResource fgColor}">
-                <Label FontSize="16" Text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."/>
+                <Label x:Name="mangaDescription" FontSize="16"/>
             </Frame>
+            
+            <!-- Bottom Page Info -->
             <Grid ColumnDefinitions="*, 3*" ColumnSpacing="10">
+                
+                <!-- Interesting Data -->
                 <VerticalStackLayout Spacing="5">
                     <Frame BackgroundColor="{DynamicResource hlColor}"></Frame>
                     <Frame BackgroundColor="{DynamicResource hlColor}"></Frame>
@@ -32,6 +39,8 @@
                     <Frame BackgroundColor="{DynamicResource hlColor}"></Frame>
                     <Frame BackgroundColor="{DynamicResource hlColor}"></Frame>
                 </VerticalStackLayout>
+                
+                <!-- Chapter List -->
                 <VerticalStackLayout Grid.Column="1">
                     <Frame></Frame>
                 </VerticalStackLayout>

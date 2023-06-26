@@ -9,7 +9,7 @@ using System.Text.Json.Nodes;
 
 public partial class MainPage : ContentPage
 {
-	static readonly HttpClient client = new HttpClient();
+	public static readonly HttpClient client = new HttpClient();
 
 	static string baseUrl = "https://api.mangadex.org/";
 	static string coverBaseUrl = "https://uploads.mangadex.org/covers/";
@@ -146,14 +146,14 @@ public partial class MainPage : ContentPage
         // Adds a tag for the content rating of a manga if the manga is not 'safe'
         if (popularNewManga[popularNewIndex]["attributes"]["contentRating"].ToString() != "safe")
         {
-            Border newTag = makeNewTag(popularNewManga[popularNewIndex]["attributes"]["contentRating"].ToString());
+            Border newTag = Tools.makeNewTag(popularNewManga[popularNewIndex]["attributes"]["contentRating"].ToString());
             popularNewTags.Add(newTag);
         }
 
         // Create all tags for the manga
         for (int i = 0; i < tags.Count(); i++)
         {
-            Border newTag = makeNewTag(tags[i]["attributes"]["name"]["en"].ToString());
+            Border newTag = Tools.makeNewTag(tags[i]["attributes"]["name"]["en"].ToString());
             popularNewTags.Add(newTag);
         }
 
@@ -326,14 +326,23 @@ public partial class MainPage : ContentPage
             }
 
             // Adds a label for the manga title
-            grid.Add(new Label 
+            Label titleLabel = new Label 
             {
                 Text = mangaTitle,
+                ClassId = mangaId,
                 LineBreakMode = LineBreakMode.TailTruncation,
                 FontAttributes = FontAttributes.Bold,
                 VerticalOptions = LayoutOptions.Center,
                 HorizontalOptions = LayoutOptions.Start
-            }, 1, 0);
+            };
+
+            TapGestureRecognizer gestureRecognizer = new TapGestureRecognizer();
+            gestureRecognizer.Tapped += (s, e) =>
+            {
+                toMangaPage(s, e);
+            };
+            titleLabel.GestureRecognizers.Add(gestureRecognizer);
+            grid.Add(titleLabel, 1, 0);
 
             // If the chapter value is null, the chapter is a Oneshot, else it can be structured like 'Vol. {vol} Ch. {ch} - {chapter came}'
             string chapterText = "";
@@ -439,32 +448,6 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private Border makeNewTag(string tag)
-    {
-        string text = tag;
-        Color backgroundColor = (Color) App.Current.Resources["hlColor"];
-
-        if (tag == "suggestive" || tag == "erotica")
-        {
-            text = tag[0].ToString().ToUpper() + tag.Substring(1);
-            backgroundColor = (Color) App.Current.Resources[tag + "BgColor"];
-        }
-
-        Border border = new Border
-        {
-            BackgroundColor = backgroundColor,
-            Stroke = backgroundColor,
-            StrokeThickness = 1,
-            StrokeShape = new RoundRectangle
-            {
-                CornerRadius = 10
-            },
-            Content = new Label { Text = text, Margin = new Thickness(15, 5, 15, 5) }
-        };
-
-        return border;
-    }
-
     private void newArtist(string name, Label author)
     {
         if (name == author.Text)
@@ -493,7 +476,7 @@ public partial class MainPage : ContentPage
 
     private async void toMangaPage(object sender, EventArgs e)
     {
-        // ((Label) sender).Text = ((Label)sender).ClassId;
-        await Shell.Current.GoToAsync("MangaPage");
+        string mangaId = ((Label)sender).ClassId;
+        await Shell.Current.GoToAsync($"MangaPage?mangaId={mangaId}");
     }
 }
