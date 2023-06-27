@@ -4,8 +4,8 @@
              x:Class="MangaReader.MainPage"
              BackgroundColor="{DynamicResource bgColor}">
 
-    <ScrollView Padding="20, 10, 20, 10" MinimumWidthRequest="500">
-        <VerticalStackLayout MaximumWidthRequest="1500" Spacing="50">
+    <ScrollView Padding="20, 0, 20, 0" MinimumWidthRequest="500">
+        <VerticalStackLayout Margin="0, 50, 0, 50" MaximumWidthRequest="1500" Spacing="50">
 
             <!-- Popular New Manga -->
             <VerticalStackLayout>
