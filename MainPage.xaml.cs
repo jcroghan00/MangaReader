@@ -9,13 +9,13 @@ using System.Text.Json.Nodes;
 
 public partial class MainPage : ContentPage
 {
-	public static readonly HttpClient client = new HttpClient();
+	public static readonly HttpClient client = new();
 
-	static string baseUrl = "https://api.mangadex.org/";
-	static string coverBaseUrl = "https://uploads.mangadex.org/covers/";
+	static readonly string baseUrl = "https://api.mangadex.org/";
+	static readonly string coverBaseUrl = "https://uploads.mangadex.org/covers/";
 
     private JsonNode popularNewManga;
-    private byte[][] popularNewImages = new byte[10][];
+    private readonly byte[][] popularNewImages = new byte[10][];
 
     private JsonNode recentChapters;
 
@@ -23,11 +23,11 @@ public partial class MainPage : ContentPage
 	{
 		InitializeComponent();
 
-		getPopularNew();
-        setNewReleases();
+		GetPopularNew();
+        SetNewReleases();
 	}
 
-    private async void getPopularNew()
+    private async void GetPopularNew()
 	{
         var dt = DateTime.Now;
         dt = dt.AddDays(-31);
@@ -45,18 +45,18 @@ public partial class MainPage : ContentPage
         // expects an object as a parameter and both Flurl and c# don't make that easy
         url += "&order%5BfollowedCount%5D=desc";
 
-        HttpRequestMessage msg = new HttpRequestMessage(HttpMethod.Get, url);
+        HttpRequestMessage msg = new(HttpMethod.Get, url);
         HttpResponseMessage res = await client.SendAsync(msg);
         res.EnsureSuccessStatusCode();
 
         var jNode = JsonNode.Parse(res.Content.ReadAsStream());
         popularNewManga = jNode["data"];
 
-        setPopularNew(0);
+        SetPopularNew(0);
     }
 
     private int popularNewIndex = 0;
-	private void setPopularNew(int offset)
+	private void SetPopularNew(int offset)
 	{
         if (popularNewManga == null)
         {
@@ -104,9 +104,9 @@ public partial class MainPage : ContentPage
         string coverFileName = "";
         var relations = popularNewManga[popularNewIndex]["relationships"].AsArray();
 
-        Label authorLabel = new Label();
+        Label authorLabel = new();
         // Filters through manga relations to get the authors/artists and cover art id
-        for (int i = 0; i < relations.Count(); i++)
+        for (int i = 0; i < relations.Count; i++)
         {
             
             if (relations[i]["type"].ToString() == "author")
@@ -133,7 +133,7 @@ public partial class MainPage : ContentPage
             }
             else if (relations[i]["type"].ToString() == "artist")
             {
-                newArtist(relations[i]["attributes"]["name"].ToString(), authorLabel);
+                NewArtist(relations[i]["attributes"]["name"].ToString(), authorLabel);
             }
             else if (relations[i]["type"].ToString() == "cover_art")
             {
@@ -146,14 +146,14 @@ public partial class MainPage : ContentPage
         // Adds a tag for the content rating of a manga if the manga is not 'safe'
         if (popularNewManga[popularNewIndex]["attributes"]["contentRating"].ToString() != "safe")
         {
-            Border newTag = Tools.makeNewTag(popularNewManga[popularNewIndex]["attributes"]["contentRating"].ToString());
+            Border newTag = Tools.MakeNewTag(popularNewManga[popularNewIndex]["attributes"]["contentRating"].ToString());
             popularNewTags.Add(newTag);
         }
 
         // Create all tags for the manga
-        for (int i = 0; i < tags.Count(); i++)
+        for (int i = 0; i < tags.Count; i++)
         {
-            Border newTag = Tools.makeNewTag(tags[i]["attributes"]["name"]["en"].ToString());
+            Border newTag = Tools.MakeNewTag(tags[i]["attributes"]["name"]["en"].ToString());
             popularNewTags.Add(newTag);
         }
 
@@ -168,7 +168,7 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private async Task<JsonNode> getNewReleases()
+    private async Task<JsonNode> GetNewReleases()
     {
         var url = baseUrl
             .AppendPathSegment("chapter")
@@ -179,7 +179,7 @@ public partial class MainPage : ContentPage
 
         url += "&order%5BreadableAt%5D=desc"; // readableAt = asc
 
-        HttpRequestMessage msg = new HttpRequestMessage(HttpMethod.Get, url);
+        HttpRequestMessage msg = new(HttpMethod.Get, url);
         HttpResponseMessage res = await client.SendAsync(msg);
         res.EnsureSuccessStatusCode();
 
@@ -190,14 +190,14 @@ public partial class MainPage : ContentPage
     }
 
     private JsonNode coverFileNames;
-    private async Task<JsonNode> getNewReleasesCovers(JsonNode data)
+    private static async Task<JsonNode> GetNewReleasesCovers(JsonNode data)
     {
-        List<string> mangaIds = new List<string>();
+        List<string> mangaIds = new();
         for (int i = 0; i < 15; i++)
         {
             var chapterRelations = data[i]["relationships"].AsArray();
 
-            for (int j = 0; j < chapterRelations.Count(); j++)
+            for (int j = 0; j < chapterRelations.Count; j++)
             {
                 if (chapterRelations[j]["type"].ToString() == "manga")
                 {
@@ -211,7 +211,7 @@ public partial class MainPage : ContentPage
             .SetQueryParam("limit", 30)
             .SetQueryParam("manga[]", mangaIds.ToArray());
 
-        HttpRequestMessage msg = new HttpRequestMessage(HttpMethod.Get, url);
+        HttpRequestMessage msg = new(HttpMethod.Get, url);
         HttpResponseMessage res = await client.SendAsync(msg);
         res.EnsureSuccessStatusCode();
 
@@ -219,13 +219,13 @@ public partial class MainPage : ContentPage
         return jNode["data"];
     }
 
-    private string getCoverByMangaId(string mangaId)
+    private string GetCoverByMangaId(string mangaId)
     {
         for (int i = 0; i < 30; i++)
         {
             var coverRelations = coverFileNames[i]["relationships"].AsArray();
 
-            for (int j = 0; j < coverRelations.Count(); j++)
+            for (int j = 0; j < coverRelations.Count; j++)
             {
                 if (coverRelations[j]["type"].ToString() == "manga" && coverRelations[j]["id"].ToString() == mangaId)
                 {
@@ -236,10 +236,10 @@ public partial class MainPage : ContentPage
         return "";
     }
 
-    private async void setNewReleases()
+    private async void SetNewReleases()
     {
-        JsonNode data = await getNewReleases();
-        coverFileNames = await getNewReleasesCovers(data);
+        JsonNode data = await GetNewReleases();
+        coverFileNames = await GetNewReleasesCovers(data);
 
         VerticalStackLayout currStack = newChapterStack1;
         for (int i = 0; i < 15; i++)
@@ -254,7 +254,7 @@ public partial class MainPage : ContentPage
             }
 
             // Border around the individual element
-            Border border = new Border
+            Border border = new()
             {
                 BackgroundColor = (Color)App.Current.Resources["bgColor"],
                 Stroke = (Color)App.Current.Resources["bgColor"],
@@ -268,7 +268,7 @@ public partial class MainPage : ContentPage
             };
             
             // Grid that structures each new chapter
-            Grid grid = new Grid
+            Grid grid = new()
             {
                 BackgroundColor = (Color)App.Current.Resources["bgColor"],
                 ColumnDefinitions =
@@ -291,7 +291,7 @@ public partial class MainPage : ContentPage
             string scanGroup = "No Group";
 
             // There is a chance that there are multiple groups who work on a chapter so this allows for stacking labels for each group
-            HorizontalStackLayout scanGroupLayout = new HorizontalStackLayout
+            HorizontalStackLayout scanGroupLayout = new()
             {
                 Spacing = 10,
                 VerticalOptions = LayoutOptions.Center,
@@ -302,7 +302,7 @@ public partial class MainPage : ContentPage
 
             // Parses the relationships of the current element to retrieve the title of the manga it is from as well as the mandaId that will later be used to find the manga's cover
             // There can be multiple scanlation groups acredited to a chapter, so if one has already been assigned to the 'scanGroup' variable it will just add a label for it, reassign the variable, and continue
-            for (int j = 0; j < chapterRelations.Count(); j++)
+            for (int j = 0; j < chapterRelations.Count; j++)
             {
                 if (chapterRelations[j]["type"].ToString() == "manga")
                 {
@@ -326,7 +326,7 @@ public partial class MainPage : ContentPage
             }
 
             // Adds a label for the manga title
-            Label titleLabel = new Label 
+            Label titleLabel = new()
             {
                 Text = mangaTitle,
                 ClassId = mangaId,
@@ -336,12 +336,15 @@ public partial class MainPage : ContentPage
                 HorizontalOptions = LayoutOptions.Start
             };
 
-            TapGestureRecognizer gestureRecognizer = new TapGestureRecognizer();
-            gestureRecognizer.Tapped += (s, e) =>
-            {
-                toMangaPage(s, e);
-            };
-            titleLabel.GestureRecognizers.Add(gestureRecognizer);
+            TapGestureRecognizer tapGestureRecognizer = new();
+            tapGestureRecognizer.Tapped += ToMangaPage;
+            titleLabel.GestureRecognizers.Add(tapGestureRecognizer);
+
+            PointerGestureRecognizer pointerGestureRecognizer = new();
+            pointerGestureRecognizer.PointerEntered += OnPointerEnterTitle;
+            pointerGestureRecognizer.PointerExited += OnPointerExitTitle;
+            titleLabel.GestureRecognizers.Add(pointerGestureRecognizer);
+
             grid.Add(titleLabel, 1, 0);
 
             // If the chapter value is null, the chapter is a Oneshot, else it can be structured like 'Vol. {vol} Ch. {ch} - {chapter came}'
@@ -412,7 +415,7 @@ public partial class MainPage : ContentPage
                 }
             }, 1, 2);
 
-            var coverFileName = getCoverByMangaId(mangaId);
+            var coverFileName = GetCoverByMangaId(mangaId);
 
             // Sets the image to one that shows no image was retrieved or to the url for the cover image
             var imageSource = ImageSource.FromFile("no_image.png");
@@ -422,7 +425,7 @@ public partial class MainPage : ContentPage
                 imageSource = ImageSource.FromUri(new Uri(coverUrl));
             }
 
-            Border imageBorder = new Border
+            Border imageBorder = new()
             {
                 BackgroundColor = (Color)App.Current.Resources["bgColor"],
                 Stroke = (Color)App.Current.Resources["bgColor"],
@@ -448,14 +451,14 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private void newArtist(string name, Label author)
+    private void NewArtist(string name, Label author)
     {
         if (name == author.Text)
         {
             return;
         }
 
-        Label label = new Label
+        Label label = new()
         {
             Text = ", " + name,
             Margin = new Thickness(0, 0, 0, 0),
@@ -464,19 +467,29 @@ public partial class MainPage : ContentPage
         popularNewAuthorStack.Add(label);
     }
 
-    private void scrollPopularNewRight(object sender, EventArgs e)
+    private void ScrollPopularNewRight(object sender, EventArgs e)
     {
-        setPopularNew(1);
+        SetPopularNew(1);
     }
 
-    private void scrollPopularNewLeft(object sender, EventArgs e)
+    private void ScrollPopularNewLeft(object sender, EventArgs e)
     {
-        setPopularNew(-1);
+        SetPopularNew(-1);
     }
 
-    private async void toMangaPage(object sender, EventArgs e)
+    private async void ToMangaPage(object sender, EventArgs e)
     {
         string mangaId = ((Label)sender).ClassId;
         await Shell.Current.GoToAsync($"MangaPage?mangaId={mangaId}");
+    }
+
+    private void OnPointerEnterTitle(object sender, EventArgs e)
+    {
+        ((Label)sender).TextDecorations = TextDecorations.Underline;
+    }
+
+    private void OnPointerExitTitle(object sender, EventArgs e)
+    {
+        ((Label)sender).TextDecorations = TextDecorations.None;
     }
 }

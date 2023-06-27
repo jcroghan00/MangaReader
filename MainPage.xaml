@@ -17,7 +17,8 @@
                         </Border>
                         <Label x:Name="popularNewTitle" Text="No Title" HorizontalOptions="Start" VerticalOptions="Center" Grid.Column="1" Grid.Row="0" FontSize="30" FontAttributes="Bold" LineBreakMode="TailTruncation">
                             <Label.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="toMangaPage"/>
+                                <TapGestureRecognizer Tapped="ToMangaPage"/>
+                                <PointerGestureRecognizer PointerEntered="OnPointerEnterTitle" PointerExited="OnPointerExitTitle"/>
                             </Label.GestureRecognizers>
                         </Label>
                         <ScrollView Orientation="Horizontal" Grid.Column="1" Grid.Row="1" Padding="0, 0, 0, 15" >
@@ -29,9 +30,9 @@
                         <Grid Grid.Column="1" Grid.Row="3" ColumnDefinitions="*, 150" RowDefinitions="*" >
                             <HorizontalStackLayout x:Name="popularNewAuthorStack" Grid.Column="0" HorizontalOptions="Start" VerticalOptions="Center"/>
                             <Grid ColumnDefinitions="Auto, *, Auto" RowDefinitions="50" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center" WidthRequest="150">
-                                <Button Grid.Row="0" Grid.Column="0" VerticalOptions="Center" BorderWidth="0" Margin="10, 0, 10, 0" Padding="10,0,10,0" Text="&lt;" BackgroundColor="{DynamicResource hlColor}" TextColor="White" HeightRequest="20" Clicked="scrollPopularNewLeft"/>
+                                <Button Grid.Row="0" Grid.Column="0" VerticalOptions="Center" BorderWidth="0" Margin="10, 0, 10, 0" Padding="10,0,10,0" Text="&lt;" BackgroundColor="{DynamicResource hlColor}" TextColor="White" HeightRequest="20" Clicked="ScrollPopularNewLeft"/>
                                 <Label Grid.Row="0" Grid.Column="1" x:Name="popularNewPageNumber" Text="#" HorizontalOptions="Center" VerticalOptions="Center" FontSize="16"/>
-                                <Button Grid.Row="0" Grid.Column="2" VerticalOptions="Center" BorderWidth="0" Margin="10, 0, 10, 0" Padding="10,0,10,0" Text="&gt;" BackgroundColor="{DynamicResource hlColor}" TextColor="White" HeightRequest="30" Clicked="scrollPopularNewRight"/>
+                                <Button Grid.Row="0" Grid.Column="2" VerticalOptions="Center" BorderWidth="0" Margin="10, 0, 10, 0" Padding="10,0,10,0" Text="&gt;" BackgroundColor="{DynamicResource hlColor}" TextColor="White" HeightRequest="30" Clicked="ScrollPopularNewRight"/>
                             </Grid>
                         </Grid>
                     </Grid>

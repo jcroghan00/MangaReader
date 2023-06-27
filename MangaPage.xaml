@@ -16,7 +16,7 @@
                 <HorizontalStackLayout x:Name="authorStack" Grid.Column="1" Grid.Row="1"/>
                 <FlexLayout x:Name="mangaTags" Margin="0, 0, 0, 25" Grid.Column="1" Grid.Row="2" Wrap="Wrap" Direction="Row"/>
                 <HorizontalStackLayout Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="2" HorizontalOptions="Center" VerticalOptions="Center" Spacing="20">
-                    <Label x:Name="mangaScore" Text="☆ Score" FontSize="16"/>
+                    <Label x:Name="mangaScore" FontSize="16"/>
                     <Label x:Name="mangaPublicationStatus" FontSize="16"/>
                 </HorizontalStackLayout>
             </Grid>
@@ -27,11 +27,11 @@
             </Frame>
             
             <!-- Bottom Page Info -->
-            <Grid ColumnDefinitions="350, *" ColumnSpacing="10" RowDefinitions="Auto, Auto">
+            <Grid ColumnDefinitions="350, 3*" ColumnSpacing="10" RowDefinitions="Auto, Auto">
                 
                 <!-- Interesting Data -->
                 <VerticalStackLayout>
-                    <FlexLayout JustifyContent="Start" Wrap="Wrap" Direction="Row" AlignItems="Start">
+                    <FlexLayout JustifyContent="Start" Wrap="Wrap" Direction="Row" AlignItems="Start" Padding="5, 5, 5, 5">
                         <Border x:Name="authorDetail" StrokeShape="RoundRectangle 10" Margin="5, 5, 5, 5" Padding="5, 10, 5, 5" StrokeThickness="0" Stroke="{DynamicResource hlColor}" BackgroundColor="{DynamicResource hlColor}">
                             <VerticalStackLayout Spacing="10">
                                 <Label x:Name="authorDetailText" LineBreakMode="TailTruncation" Text="Author" Margin="10, 0, 10, 0"/>
@@ -71,7 +71,7 @@
                         <!-- <Frame x:Name="readOrBuyDetail" BorderColor="{DynamicResource hlColor}" BackgroundColor="{DynamicResource hlColor}"></Frame> -->
                         <!-- <Frame x:Name="trackDetail" BorderColor="{DynamicResource hlColor}" BackgroundColor="{DynamicResource hlColor}"></Frame> -->
                     </FlexLayout>
-                    <Border x:Name="alternativeTitleDetail" IsVisible="false" StrokeShape="RoundRectangle 10" Margin="9, 15, 9, 5" Padding="5, 10, 5, 5" StrokeThickness="0" Stroke="{DynamicResource hlColor}" BackgroundColor="{DynamicResource hlColor}">
+                    <Border x:Name="alternativeTitleDetail" IsVisible="false" StrokeShape="RoundRectangle 10" Margin="11, 15, 11, 5" Padding="5, 10, 5, 5" StrokeThickness="0" Stroke="{DynamicResource hlColor}" BackgroundColor="{DynamicResource hlColor}">
                         <VerticalStackLayout Spacing="10" Margin="0, 0, 0, 5">
                             <Label LineBreakMode="TailTruncation" Text="Alternative Titles" Margin="10, 0, 10, 0"/>
                             <VerticalStackLayout x:Name="alternativeTitleDetailStack" Spacing="5" Margin="10, 0, 10, 0"/>
@@ -81,7 +81,7 @@
                 
                 <!-- Chapter List -->
                 <VerticalStackLayout x:Name="chapterStack"/>
-         </Grid>
+            </Grid>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

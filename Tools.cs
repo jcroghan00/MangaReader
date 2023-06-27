@@ -9,7 +9,7 @@ namespace MangaReader
 {
     class Tools
     {
-        public static Border makeNewTag(string tag)
+        public static Border MakeNewTag(string tag)
         {
             string text = tag;
             Color backgroundColor = (Color)App.Current.Resources["hlColor"];
