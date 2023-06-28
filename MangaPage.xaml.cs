@@ -1,12 +1,10 @@
-﻿using System.ComponentModel;
-
-namespace MangaReader;
+﻿namespace MangaReader;
 
 using Flurl;
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Controls.Shapes;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
-using System.Web;
 
 [QueryProperty(nameof(MangaId), "mangaId")]
 public partial class MangaPage : ContentPage
@@ -34,7 +32,6 @@ public partial class MangaPage : ContentPage
         base.OnAppearing();
 
         GetMangaById(mangaId);
-        GetMangaStats(mangaId);
     }
 
 	private async void GetMangaById(string mangaId)
@@ -66,9 +63,42 @@ public partial class MangaPage : ContentPage
         SetMangaStats(stats);
     }
 
+    private void OnPageLoaded(object sender, EventArgs e)
+    {
+        GetMangaStats(mangaId);
+        GetMangaChapters(mangaId, 0);
+    }
+
+    private async void GetMangaChapters(string mangaId, int offset)
+    {
+        var url = baseUrl
+            .AppendPathSegment($"manga/{mangaId}/feed")
+            .SetQueryParam("limit", 50)
+            .SetQueryParam("offset", offset)
+            .SetQueryParam("translatedLanguage[]", new[] { "en" })
+            .SetQueryParam("contentRating[]", new[] {"safe", "suggestive", "erotica"})
+            .SetQueryParam("includes[]", new[] {"scanlation_group", "user"});
+
+        url += "&order%5Bvolume%5D=desc&order%5Bchapter%5D=desc";
+
+        HttpRequestMessage msg = new(HttpMethod.Get, url);
+        HttpResponseMessage res = await MainPage.client.SendAsync(msg);
+        res.EnsureSuccessStatusCode();
+
+        var jNode = JsonNode.Parse(res.Content.ReadAsStream());
+        SetMangaChapters(jNode["data"]);
+    }
+
     private void SetMangaElements(JsonNode manga)
     {
-        mangaTitle.Text = manga["attributes"]["title"]["en"].ToString();
+        if (manga["attributes"]["title"]["en"] != null)
+        {
+            mangaTitle.Text = manga["attributes"]["title"]["en"].ToString();
+        }
+        else
+        {
+            mangaTitle.Text = manga["attributes"]["title"]["ja"].ToString();
+        }
         
         if (manga["attributes"]["description"].ToString() == "{}")
         {
@@ -76,11 +106,11 @@ public partial class MangaPage : ContentPage
         }
         else
         {
-            try
+            if (manga["attributes"]["description"]["en"] != null)
             {
                 mangaDescription.Text = manga["attributes"]["description"]["en"].ToString();
             }
-            catch (NullReferenceException)
+            else
             {
                 mangaDescription.Text = manga["attributes"]["description"]["ja"].ToString();
             }
@@ -229,6 +259,251 @@ public partial class MangaPage : ContentPage
         mangaScore.Text = $"☆ {Math.Round(float.Parse(stats[mangaId]["rating"]["average"].ToString()), 2, MidpointRounding.ToEven)}";
     }
 
+    private void SetMangaChapters(JsonNode chaptersNode)
+    {
+        chapterStack.Children.Clear();
+        var chapters = chaptersNode.AsArray();
+
+        if (chapters.Count == 0 )
+        {
+            chapterStack.Add(new Label
+            {
+                Text = "No Chapters"
+            });
+            return;
+        }
+
+        VerticalStackLayout volumeLayout = new();
+        string lastVolume;
+
+        string volText = null;
+        if (chapters[0]["attributes"]["volume"] == null)
+        {
+            volText = "No Volume";
+            lastVolume = null;
+        }
+        else
+        {
+            volText = $"Volume {chapters[0]["attributes"]["volume"]}";
+            lastVolume = chapters[0]["attributes"]["volume"].ToString();
+        }
+
+        volumeLayout.Add(new Label
+        {
+            Text = volText,
+            FontSize = 24,
+            Margin = new Thickness(10, 0, 0, 10)
+        });
+        volumeLayout.Spacing = 10;
+
+        for (int i = 0; i < chapters.Count; i++) 
+        {
+            if (chapters[i]["attributes"]["volume"] != null && lastVolume != chapters[i]["attributes"]["volume"].ToString() )
+            {
+                lastVolume = chapters[i]["attributes"]["volume"].ToString();
+                chapterStack.Add(volumeLayout);
+                volumeLayout = new();
+                volumeLayout.Spacing = 10;
+                volumeLayout.Add(new Label
+                {
+                    Text = $"Volume {lastVolume}",
+                    FontSize = 24,
+                    Margin = new Thickness(10, 0, 0, 10)
+                });
+            }
+
+            PointerGestureRecognizer chapterPointerGestureRecognizer = new();
+            chapterPointerGestureRecognizer.PointerEntered += OnPointerEnterChapter;
+            chapterPointerGestureRecognizer.PointerExited += OnPointerExitChapter;
+
+            Border chapterBorder = new Border
+            {
+                Stroke = (Color)App.Current.Resources["hlColor"],
+                BackgroundColor = (Color)App.Current.Resources["hlColor"],
+                Padding = new Thickness(10, 10, 10, 10),
+                GestureRecognizers =
+                {
+                    chapterPointerGestureRecognizer
+                },
+                StrokeShape = new RoundRectangle
+                {
+                    CornerRadius = 5
+                }
+            };
+
+            Grid chapterGrid = new Grid
+            {
+                ColumnDefinitions = {
+                        new ColumnDefinition(),
+                        new ColumnDefinition{ Width = new GridLength(1, GridUnitType.Auto) }
+                    },
+                RowDefinitions =
+                    {
+                        new RowDefinition(),
+                        new RowDefinition()
+                    },
+                RowSpacing = 5
+            };
+
+            string chapterTitle = "Oneshot";
+
+            if (chapters[i]["attributes"]["chapter"] != null)
+            {
+                chapterTitle = $"Ch. {chapters[i]["attributes"]["chapter"]}";
+            }
+
+            chapterTitle += chapters[i]["attributes"]["title"] != null ? $" - {chapters[i]["attributes"]["title"]}" : "";
+
+            chapterGrid.Add(new Label
+            {
+                Text = chapterTitle,
+                Margin = new Thickness(5, 5, 0, 0),
+                FontSize = 14
+            }, 0, 0);
+
+            DateTime readableAt = DateTime.Parse(chapters[i]["attributes"]["readableAt"].ToString());
+            TimeSpan timeDifference = DateTime.Now - readableAt;
+
+            string timeReadable = "No Time Readable";
+            if (timeDifference.TotalDays / 365.2425 >= 1)
+            {
+                timeReadable = (int)(timeDifference.TotalDays / 365.2425) == 1 ? (int)(timeDifference.TotalDays / 365.2425) + " Year Ago" : (int)(timeDifference.TotalDays / 365.2425) + " Years Ago";
+            }
+            else if (timeDifference.TotalDays / 30.437 >= 1)
+            {
+                timeReadable = (int)(timeDifference.TotalDays / 30.437) == 1 ? (int)(timeDifference.TotalDays / 30.437) + " Month Ago" : (int)(timeDifference.TotalDays / 30.437) + " Months Ago";
+            }
+            else if (timeDifference.Days > 0)
+            {
+                timeReadable = timeDifference.Days == 1 ? timeDifference.Days.ToString() + " Day Ago" : timeDifference.Days.ToString() + " Days Ago";
+            }
+            else if (timeDifference.Hours > 0)
+            {
+                timeReadable = timeDifference.Hours == 1 ? timeDifference.Hours.ToString() + " Hour Ago" : timeDifference.Hours.ToString() + " Hours Ago";
+            }
+            else if (timeDifference.Minutes > 0)
+            {
+                timeReadable = timeDifference.Minutes == 1 ? timeDifference.Minutes.ToString() + " Minute Ago" : timeDifference.Minutes.ToString() + " Minutes Ago";
+            }
+            else if (timeDifference.Seconds > 0)
+            {
+                timeReadable = timeDifference.Seconds == 1 ? timeDifference.Seconds.ToString() + " Second Ago" : timeDifference.Seconds.ToString() + " Seconds Ago";
+            }
+
+            chapterGrid.Add(new Label {
+                Text = timeReadable,
+                HorizontalTextAlignment = TextAlignment.End,
+                FontSize = 14
+            }, 1, 0);
+
+            var chapterRelations = chapters[i]["relationships"].AsArray();
+
+            string postUser = "No User";
+            string scanGroup = "No Group";
+
+            HorizontalStackLayout scanGroupLayout = new()
+            {
+                Spacing = 5,
+                VerticalOptions = LayoutOptions.Center,
+                HorizontalOptions = LayoutOptions.Start
+            };
+
+            FontAttributes scanGroupAttributes = FontAttributes.Italic;
+
+            for (int j = 0; j < chapterRelations.Count; j++)
+            {
+                if (chapterRelations[j]["type"].ToString() == "user")
+                {
+                    if (chapterRelations[j]["attributes"]["username"] != null)
+                    {
+                        postUser = chapterRelations[j]["attributes"]["username"].ToString();
+                    }
+                }
+                else if (chapterRelations[j]["type"].ToString() == "scanlation_group")
+                {
+                    if (scanGroup != "No Group")
+                    {
+                        PointerGestureRecognizer scanGroupPointer = new();
+                        scanGroupPointer.PointerEntered += OnPointerEnterHighlight;
+                        scanGroupPointer.PointerExited += OnPointerExitHighlight;
+                        scanGroupLayout.Add(new Border
+                        {
+                            Stroke = null,
+                            BackgroundColor = null,
+                            StrokeShape = new RoundRectangle
+                            {
+                                CornerRadius = 5
+                            },
+                            Padding = new Thickness(5, 5, 5, 5),
+                            GestureRecognizers =
+                            {
+                                    scanGroupPointer
+                            },
+                            Content = new Label
+                            {
+                                Text = scanGroup,
+                                FontAttributes = scanGroupAttributes,
+                                LineBreakMode = LineBreakMode.TailTruncation,
+                                FontSize = 14
+                            }
+                        });
+                    }
+
+                    scanGroup = chapterRelations[j]["attributes"]["name"].ToString();
+                    scanGroupAttributes = FontAttributes.None;
+                }
+            }
+
+            PointerGestureRecognizer pointerGestureRecognizer = new();
+            pointerGestureRecognizer.PointerEntered += OnPointerEnterHighlight;
+            pointerGestureRecognizer.PointerExited += OnPointerExitHighlight;
+            scanGroupLayout.Add(new Border
+            {
+                Stroke = null,
+                BackgroundColor = null,
+                StrokeShape = new RoundRectangle
+                {
+                    CornerRadius = 5
+                },
+                Padding = new Thickness(5, 5, 5, 5),
+                GestureRecognizers = { scanGroup != "No Group" ? pointerGestureRecognizer : null },
+                Content = new Label
+                {
+                    Text = scanGroup,
+                    FontAttributes = scanGroupAttributes,
+                    LineBreakMode = LineBreakMode.TailTruncation,
+                    FontSize = 14
+                }
+            });
+
+            chapterGrid.Add(scanGroupLayout, 0, 1);
+
+            chapterGrid.Add(new Border
+            {
+                Stroke = null,
+                BackgroundColor = null,
+                StrokeShape = new RoundRectangle
+                {
+                    CornerRadius = 5
+                },
+                Padding = new Thickness(5, 5, 5, 5),
+                GestureRecognizers = { postUser != "No User" ? pointerGestureRecognizer : null },
+                HorizontalOptions = LayoutOptions.End,
+                Content = new Label
+                {
+                    Text = postUser,
+                    LineBreakMode = LineBreakMode.TailTruncation,
+                    HorizontalTextAlignment = TextAlignment.End,
+                    FontSize = 14
+                }
+            }, 1, 1);
+
+            chapterBorder.Content = chapterGrid;
+            volumeLayout.Add(chapterBorder);
+        }
+        chapterStack.Add(volumeLayout);
+    }
+
     private static void CreateAndAddDetail(Border overLayout, FlexLayout layout, List<string> input)
     {
         for (int i = 0; i < input.Count; i++)
@@ -241,5 +516,25 @@ public partial class MangaPage : ContentPage
 
             layout.Add(border);
         }
+    }
+
+    private void OnPointerEnterHighlight(object sender, EventArgs e)
+    {
+        ((Border)sender).BackgroundColor = (Color)App.Current.Resources["hlColor"];
+    }
+
+    private void OnPointerExitHighlight(object sender, EventArgs e)
+    {
+        ((Border)sender).BackgroundColor = null;
+    }
+
+    private void OnPointerEnterChapter(object sender, EventArgs e)
+    {
+        ((Border)sender).BackgroundColor = (Color)App.Current.Resources["fgColor"];
+    }
+
+    private void OnPointerExitChapter(object sender, EventArgs e)
+    {
+        ((Border)sender).BackgroundColor = (Color)App.Current.Resources["hlColor"];
     }
 }

@@ -2,7 +2,8 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="MangaReader.MangaPage"
-             Title="MangaPage">
+             Title="MangaPage"
+             Loaded="OnPageLoaded">
 
     <ScrollView Padding="20, 0, 20, 0" BackgroundColor="{DynamicResource bgColor}">
         <VerticalStackLayout Margin="10, 50, 10, 50" MaximumWidthRequest="1500" Spacing="50">
@@ -80,7 +81,7 @@
                 </VerticalStackLayout>
                 
                 <!-- Chapter List -->
-                <VerticalStackLayout x:Name="chapterStack"/>
+                <VerticalStackLayout x:Name="chapterStack" Grid.Column="1" Spacing="30"/>
             </Grid>
         </VerticalStackLayout>
     </ScrollView>

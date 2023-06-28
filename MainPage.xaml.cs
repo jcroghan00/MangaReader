@@ -17,14 +17,12 @@ public partial class MainPage : ContentPage
     private JsonNode popularNewManga;
     private readonly byte[][] popularNewImages = new byte[10][];
 
-    private JsonNode recentChapters;
-
     public MainPage()
 	{
 		InitializeComponent();
 
 		GetPopularNew();
-        SetNewReleases();
+        GetNewReleases();
 	}
 
     private async void GetPopularNew()
@@ -52,7 +50,8 @@ public partial class MainPage : ContentPage
         var jNode = JsonNode.Parse(res.Content.ReadAsStream());
         popularNewManga = jNode["data"];
 
-        SetPopularNew(0);
+        Random random = new Random();
+        SetPopularNew(random.Next(0, 10));
     }
 
     private int popularNewIndex = 0;
@@ -90,7 +89,7 @@ public partial class MainPage : ContentPage
 
         popularNewPageNumber.Text = (popularNewIndex + 1).ToString();
         popularNewTitle.Text = popularNewManga[popularNewIndex]["attributes"]["title"]["en"].ToString();
-        popularNewTitle.ClassId = popularNewManga[popularNewIndex]["id"].ToString();
+        popularNewTitleTapGesture.CommandParameter = popularNewManga[popularNewIndex]["id"].ToString();
 
         if (popularNewManga[popularNewIndex]["attributes"]["description"].ToString() == "{}")
         {
@@ -168,7 +167,7 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private async Task<JsonNode> GetNewReleases()
+    private async void GetNewReleases()
     {
         var url = baseUrl
             .AppendPathSegment("chapter")
@@ -184,9 +183,7 @@ public partial class MainPage : ContentPage
         res.EnsureSuccessStatusCode();
 
         var jNode = JsonNode.Parse(res.Content.ReadAsStream());
-        recentChapters = jNode["data"];
-
-        return recentChapters;
+        SetNewReleases(jNode["data"]);
     }
 
     private JsonNode coverFileNames;
@@ -236,9 +233,8 @@ public partial class MainPage : ContentPage
         return "";
     }
 
-    private async void SetNewReleases()
+    private async void SetNewReleases(JsonNode data)
     {
-        JsonNode data = await GetNewReleases();
         coverFileNames = await GetNewReleasesCovers(data);
 
         VerticalStackLayout currStack = newChapterStack1;
@@ -271,6 +267,7 @@ public partial class MainPage : ContentPage
             Grid grid = new()
             {
                 BackgroundColor = (Color)App.Current.Resources["bgColor"],
+                Padding = new Thickness(0, 0, 10, 0),
                 ColumnDefinitions =
                     {
                         new ColumnDefinition { Width = new GridLength(80) },
@@ -293,7 +290,7 @@ public partial class MainPage : ContentPage
             // There is a chance that there are multiple groups who work on a chapter so this allows for stacking labels for each group
             HorizontalStackLayout scanGroupLayout = new()
             {
-                Spacing = 10,
+                Spacing = 5,
                 VerticalOptions = LayoutOptions.Center,
                 HorizontalOptions = LayoutOptions.Start
             };
@@ -306,17 +303,43 @@ public partial class MainPage : ContentPage
             {
                 if (chapterRelations[j]["type"].ToString() == "manga")
                 {
-                    mangaTitle = chapterRelations[j]["attributes"]["title"]["en"].ToString();
+                    if (chapterRelations[j]["attributes"]["title"]["en"] != null)
+                    {
+                        mangaTitle = chapterRelations[j]["attributes"]["title"]["en"].ToString();
+                    }
+                    else
+                    {
+                        mangaTitle = chapterRelations[j]["attributes"]["title"]["ja"].ToString();
+                    }
+                    
                     mangaId = chapterRelations[j]["id"].ToString();
                 }
                 else if (chapterRelations[j]["type"].ToString() == "scanlation_group")
                 {
                     if (scanGroup != "No Group")
                     {
-                        scanGroupLayout.Add(new Label
+                        PointerGestureRecognizer scanGroupPointer = new();
+                        scanGroupPointer.PointerEntered += OnPointerEnterHighlight;
+                        scanGroupPointer.PointerExited += OnPointerExitHighlight;
+                        scanGroupLayout.Add(new Border
                         {
-                            Text = scanGroup,
-                            VerticalOptions = LayoutOptions.Center,
+                            Stroke = (Color)App.Current.Resources["bgColor"],
+                            BackgroundColor = (Color)App.Current.Resources["bgColor"],
+                            StrokeShape = new RoundRectangle
+                            {
+                                CornerRadius = 5
+                            },
+                            Padding = new Thickness(5, 5, 5, 5),
+                            GestureRecognizers =
+                            {
+                                scanGroupPointer
+                            },
+                            Content = new Label
+                            {
+                                Text = scanGroup,
+                                FontAttributes = scanGroupAttributes,
+                                LineBreakMode = LineBreakMode.TailTruncation
+                            }
                         });
                     }
 
@@ -329,7 +352,7 @@ public partial class MainPage : ContentPage
             Label titleLabel = new()
             {
                 Text = mangaTitle,
-                ClassId = mangaId,
+                Margin = new Thickness(5, 0, 0, 0),
                 LineBreakMode = LineBreakMode.TailTruncation,
                 FontAttributes = FontAttributes.Bold,
                 VerticalOptions = LayoutOptions.Center,
@@ -338,6 +361,7 @@ public partial class MainPage : ContentPage
 
             TapGestureRecognizer tapGestureRecognizer = new();
             tapGestureRecognizer.Tapped += ToMangaPage;
+            tapGestureRecognizer.CommandParameter = mangaId;
             titleLabel.GestureRecognizers.Add(tapGestureRecognizer);
 
             PointerGestureRecognizer pointerGestureRecognizer = new();
@@ -347,7 +371,7 @@ public partial class MainPage : ContentPage
 
             grid.Add(titleLabel, 1, 0);
 
-            // If the chapter value is null, the chapter is a Oneshot, else it can be structured like 'Vol. {vol} Ch. {ch} - {chapter came}'
+            // If the chapter value is null, the chapter is a Oneshot, else it can be structured like 'Vol. {vol} Ch. {ch} - {chapter name}'
             string chapterText = "";
             if (data[i]["attributes"]["chapter"] == null)
             {
@@ -360,21 +384,49 @@ public partial class MainPage : ContentPage
                 chapterText += data[i]["attributes"]["title"] != null ? $" - {data[i]["attributes"]["title"]}" : "";
             }
 
+            // Creates the pointer gesture that highlights chapters and scan groups
+            pointerGestureRecognizer = new();
+            pointerGestureRecognizer.PointerEntered += OnPointerEnterHighlight;
+            pointerGestureRecognizer.PointerExited += OnPointerExitHighlight;
+
             // Adds the chapter text to the grid
-            grid.Add(new Label 
-            { 
-                Text = chapterText,
-                LineBreakMode = LineBreakMode.TailTruncation,
+            grid.Add(new Border {
+                Stroke = (Color)App.Current.Resources["bgColor"],
+                BackgroundColor = (Color)App.Current.Resources["bgColor"],
+                StrokeShape = new RoundRectangle
+                {
+                    CornerRadius = 5
+                },
+                Padding = new Thickness(5, 5, 5, 5),
+                GestureRecognizers =
+                {
+                    pointerGestureRecognizer
+                },
+                Content = new Label
+                {
+                    Text = chapterText,
+                    LineBreakMode = LineBreakMode.TailTruncation,
+                },
                 VerticalOptions = LayoutOptions.Center,
                 HorizontalOptions = LayoutOptions.Start
             }, 1, 1);
 
             // Adds the scan group(s) to the grid
-            scanGroupLayout.Add(new Label
-            {
-                Text = scanGroup,
-                FontAttributes = scanGroupAttributes,
-                VerticalOptions = LayoutOptions.Center,
+            scanGroupLayout.Add(new Border {
+                Stroke = (Color)App.Current.Resources["bgColor"],
+                BackgroundColor = (Color)App.Current.Resources["bgColor"],
+                StrokeShape = new RoundRectangle
+                {
+                    CornerRadius = 5
+                },
+                Padding = new Thickness(5, 5, 5, 5),
+                GestureRecognizers = { scanGroup != "No Group" ? pointerGestureRecognizer : null },
+                Content = new Label
+                {
+                    Text = scanGroup,
+                    FontAttributes = scanGroupAttributes,
+                    LineBreakMode = LineBreakMode.TailTruncation
+                }
             });
 
             DateTime readableAt = DateTime.Parse(data[i]["attributes"]["readableAt"].ToString());
@@ -402,7 +454,6 @@ public partial class MainPage : ContentPage
             grid.Add(new Grid
             {
                 VerticalOptions = LayoutOptions.Center,
-                Padding = new Thickness(0, 0, 10, 0),
                 Children =
                 {
                     scanGroupLayout,
@@ -479,7 +530,7 @@ public partial class MainPage : ContentPage
 
     private async void ToMangaPage(object sender, EventArgs e)
     {
-        string mangaId = ((Label)sender).ClassId;
+        string mangaId = ((TappedEventArgs)e).Parameter.ToString();
         await Shell.Current.GoToAsync($"MangaPage?mangaId={mangaId}");
     }
 
@@ -491,5 +542,27 @@ public partial class MainPage : ContentPage
     private void OnPointerExitTitle(object sender, EventArgs e)
     {
         ((Label)sender).TextDecorations = TextDecorations.None;
+    }
+
+    private void OnPointerEnterButton(object sender, EventArgs e)
+    {
+        ((Border)((Label)sender).Parent).BackgroundColor = (Color)App.Current.Resources["bgColor"];
+        ((Border)((Label)sender).Parent).Stroke = (Color)App.Current.Resources["bgColor"];
+    }
+
+    private void OnPointerExitButton(object sender, EventArgs e)
+    {
+        ((Border)((Label)sender).Parent).BackgroundColor = (Color)App.Current.Resources["hlColor"];
+        ((Border)((Label)sender).Parent).Stroke = (Color)App.Current.Resources["hlColor"];
+    }
+
+    private void OnPointerEnterHighlight(object sender, EventArgs e)
+    {
+        ((Border)sender).BackgroundColor = (Color)App.Current.Resources["fgColor"];
+    }
+
+    private void OnPointerExitHighlight(object sender, EventArgs e)
+    {
+        ((Border)sender).BackgroundColor = (Color)App.Current.Resources["bgColor"];
     }
 }
