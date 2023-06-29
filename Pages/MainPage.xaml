@@ -21,7 +21,7 @@
                         </Border>
                         <Label x:Name="popularNewTitle" Text="No Title" HorizontalOptions="Start" VerticalOptions="Center" Grid.Column="1" Grid.Row="0" FontSize="30" FontAttributes="Bold" LineBreakMode="TailTruncation">
                             <Label.GestureRecognizers>
-                                <TapGestureRecognizer x:Name="popularNewTitleTapGesture" Tapped="ToMangaPage"/>
+                                <TapGestureRecognizer x:Name="popularNewTitleTapGesture" Tapped="fromNewToPage"/>
                                 <PointerGestureRecognizer PointerEntered="OnPointerEnterTitle" PointerExited="OnPointerExitTitle"/>
                             </Label.GestureRecognizers>
                         </Label>

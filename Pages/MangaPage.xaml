@@ -5,7 +5,7 @@
              Title="MangaPage"
              Loaded="OnPageLoaded">
 
-    <ScrollView Padding="20, 0, 20, 0" BackgroundColor="{DynamicResource bgColor}">
+    <ScrollView x:Name="scrollView" Padding="20, 0, 20, 0" BackgroundColor="{DynamicResource bgColor}">
         <VerticalStackLayout Margin="10, 50, 10, 50" MaximumWidthRequest="1500" Spacing="50">
             
             <!-- Upper Page Info -->

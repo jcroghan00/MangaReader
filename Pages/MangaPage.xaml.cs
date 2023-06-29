@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 [QueryProperty(nameof(MangaId), "mangaId")]
 public partial class MangaPage : ContentPage
 {
+    private bool hasLoaded = false;
 	private string mangaId = "No ID";
 	public string MangaId
 	{
@@ -31,8 +32,12 @@ public partial class MangaPage : ContentPage
     {
         base.OnAppearing();
 
-        GetMangaById(mangaId);
+        if (!hasLoaded)
+        {
+            GetMangaById(mangaId);
+        }
     }
+        
 
 	private async void GetMangaById(string mangaId)
 	{
@@ -65,8 +70,16 @@ public partial class MangaPage : ContentPage
 
     private void OnPageLoaded(object sender, EventArgs e)
     {
-        GetMangaStats(mangaId);
-        GetMangaChapters(mangaId, 0);
+        if (!hasLoaded)
+        {
+            var content = scrollView.Content;
+            scrollView.Content = null;
+            scrollView.Content = content;
+
+            GetMangaStats(mangaId);
+            GetMangaChapters(mangaId, 0);
+        }
+        hasLoaded = true;
     }
 
     private async void GetMangaChapters(string mangaId, int offset)
@@ -312,6 +325,10 @@ public partial class MangaPage : ContentPage
                 });
             }
 
+            TapGestureRecognizer tapGestureRecognizer = new();
+            tapGestureRecognizer.Tapped += Tools.ToChapterPage;
+            tapGestureRecognizer.CommandParameter = chapters[i]["id"].ToString();
+
             PointerGestureRecognizer chapterPointerGestureRecognizer = new();
             chapterPointerGestureRecognizer.PointerEntered += OnPointerEnterChapter;
             chapterPointerGestureRecognizer.PointerExited += OnPointerExitChapter;
@@ -323,7 +340,8 @@ public partial class MangaPage : ContentPage
                 Padding = new Thickness(10, 10, 10, 10),
                 GestureRecognizers =
                 {
-                    chapterPointerGestureRecognizer
+                    chapterPointerGestureRecognizer,
+                    tapGestureRecognizer
                 },
                 StrokeShape = new RoundRectangle
                 {

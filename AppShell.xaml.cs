@@ -7,5 +7,6 @@ public partial class AppShell : Shell
 		InitializeComponent();
 
 		Routing.RegisterRoute("MangaPage", typeof(MangaPage));
-	}
+        Routing.RegisterRoute("ChapterPage", typeof(ChapterPage));
+    }
 }

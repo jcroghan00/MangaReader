@@ -1,9 +1,4 @@
 ﻿using Microsoft.Maui.Controls.Shapes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MangaReader
 {
@@ -33,6 +28,18 @@ namespace MangaReader
             };
 
             return border;
+        }
+
+        public static async void ToMangaPage(object sender, EventArgs e)
+        {
+            string mangaId = ((TappedEventArgs)e).Parameter.ToString();
+            await Shell.Current.GoToAsync($"MangaPage?mangaId={mangaId}");
+        }
+
+        public static async void ToChapterPage(object sender, EventArgs e)
+        {
+            string chapterId = ((TappedEventArgs)e).Parameter.ToString();
+            await Shell.Current.GoToAsync($"ChapterPage?chapterId={chapterId}");
         }
     }
 }

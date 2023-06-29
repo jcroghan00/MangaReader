@@ -360,7 +360,7 @@ public partial class MainPage : ContentPage
             };
 
             TapGestureRecognizer tapGestureRecognizer = new();
-            tapGestureRecognizer.Tapped += ToMangaPage;
+            tapGestureRecognizer.Tapped += Tools.ToMangaPage;
             tapGestureRecognizer.CommandParameter = mangaId;
             titleLabel.GestureRecognizers.Add(tapGestureRecognizer);
 
@@ -528,12 +528,6 @@ public partial class MainPage : ContentPage
         SetPopularNew(-1);
     }
 
-    private async void ToMangaPage(object sender, EventArgs e)
-    {
-        string mangaId = ((TappedEventArgs)e).Parameter.ToString();
-        await Shell.Current.GoToAsync($"MangaPage?mangaId={mangaId}");
-    }
-
     private void OnPointerEnterTitle(object sender, EventArgs e)
     {
         ((Label)sender).TextDecorations = TextDecorations.Underline;
@@ -564,5 +558,10 @@ public partial class MainPage : ContentPage
     private void OnPointerExitHighlight(object sender, EventArgs e)
     {
         ((Border)sender).BackgroundColor = (Color)App.Current.Resources["bgColor"];
+    }
+
+    private void fromNewToPage(object sender, EventArgs e)
+    {
+        Tools.ToMangaPage(sender, e);
     }
 }
