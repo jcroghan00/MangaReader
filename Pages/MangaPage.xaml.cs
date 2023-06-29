@@ -275,6 +275,11 @@ public partial class MangaPage : ContentPage
 
     private void SetMangaChapters(JsonNode chaptersNode)
     {
+        if (chapterPage != 0)
+        {
+            scrollView.ScrollToAsync(0, mangaInfoGrid.Height, true);
+        }
+
         chapterStack.Children.Clear();
         var chapters = chaptersNode.AsArray();
 
@@ -316,8 +321,10 @@ public partial class MangaPage : ContentPage
             {
                 lastVolume = chapters[i]["attributes"]["volume"].ToString();
                 chapterStack.Add(volumeLayout);
-                volumeLayout = new();
-                volumeLayout.Spacing = 10;
+                volumeLayout = new()
+                {
+                    Spacing = 10
+                };
                 volumeLayout.Add(new Label
                 {
                     Text = $"Volume {lastVolume}",
@@ -334,7 +341,7 @@ public partial class MangaPage : ContentPage
             chapterPointerGestureRecognizer.PointerEntered += OnPointerEnterChapter;
             chapterPointerGestureRecognizer.PointerExited += OnPointerExitChapter;
 
-            Border chapterBorder = new Border
+            Border chapterBorder = new()
             {
                 Stroke = (Color)App.Current.Resources["hlColor"],
                 BackgroundColor = (Color)App.Current.Resources["hlColor"],
@@ -350,7 +357,7 @@ public partial class MangaPage : ContentPage
                 }
             };
 
-            Grid chapterGrid = new Grid
+            Grid chapterGrid = new()
             {
                 ColumnDefinitions = {
                         new ColumnDefinition(),
@@ -522,9 +529,10 @@ public partial class MangaPage : ContentPage
         }
         chapterStack.Add(volumeLayout);
 
-        Grid buttonGrid = new Grid
+        Grid buttonGrid = new()
         {
             HorizontalOptions = LayoutOptions.Center,
+            ColumnSpacing = 10,
             ColumnDefinitions =
             {
                 new ColumnDefinition{ Width = new GridLength(1, GridUnitType.Auto) },
@@ -533,14 +541,14 @@ public partial class MangaPage : ContentPage
             }
         };
 
-        PointerGestureRecognizer pointerGestureRecognizer = new PointerGestureRecognizer();
+        PointerGestureRecognizer pointerGestureRecognizer = new();
         pointerGestureRecognizer.PointerEntered += OnPointerEnterTitle;
         pointerGestureRecognizer.PointerExited += OnPointerExitTitle;
 
-        TapGestureRecognizer tapGestureDown = new TapGestureRecognizer();
+        TapGestureRecognizer tapGestureDown = new();
         tapGestureDown.Tapped += OnChapterPageDown;
 
-        Label downLabel = new Label
+        Label downLabel = new()
         {
             Text = "<",
             GestureRecognizers = 
@@ -550,10 +558,10 @@ public partial class MangaPage : ContentPage
             }
         };
 
-        TapGestureRecognizer tapGestureUp = new TapGestureRecognizer();
+        TapGestureRecognizer tapGestureUp = new();
         tapGestureUp.Tapped += OnChapterPageUp;
 
-        Label upLabel = new Label
+        Label upLabel = new()
         {
             Text = ">",
             GestureRecognizers =
@@ -566,11 +574,11 @@ public partial class MangaPage : ContentPage
         if (chapterPage != 0)
         {
             buttonGrid.Add(downLabel, 0, 0);
-            scrollView.ScrollToAsync(0, mangaInfoGrid.Height, true);
         }
-
-        buttonGrid.Add(upLabel, 2, 0);
-
+        if (chapters.Count >= 50)
+        {
+            buttonGrid.Add(upLabel, 2, 0);
+        }
         buttonGrid.Add(new Label
         {
             Text = (chapterPage + 1).ToString()

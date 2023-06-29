@@ -29,6 +29,7 @@ public partial class ChapterPage : ContentPage
         }
     }
 
+    JsonNode chapter;
     string pageUrl;
     JsonArray pages;
 
@@ -46,7 +47,27 @@ public partial class ChapterPage : ContentPage
 
     private async void GetChapterById(string id)
     {
-        Debug.WriteLine(id);
+        var url = $"{baseUrl}chapter/{id}";
+
+        HttpRequestMessage msg = new(HttpMethod.Get, url);
+        HttpResponseMessage res = await MainPage.client.SendAsync(msg);
+        res.EnsureSuccessStatusCode();
+
+        var jNode = JsonNode.Parse(res.Content.ReadAsStream());
+        chapter = jNode["data"];
+
+        if (chapter["attributes"]["externalUrl"] != null)
+        {
+            CreateChapterWebView(chapter["attributes"]["externalUrl"].ToString());
+        }
+        else
+        {
+            GetChapterPagesById(id);
+        }
+    }
+
+    private async void GetChapterPagesById(string id)
+    {
         var url = $"{baseUrl}at-home/server/{id}";
 
         HttpRequestMessage msg = new(HttpMethod.Get, url);
@@ -55,6 +76,7 @@ public partial class ChapterPage : ContentPage
 
         // TODO: Add an option to use data-saver images because oh lord the ram usage
         var jNode = JsonNode.Parse(res.Content.ReadAsStream());
+        Debug.WriteLine(jNode.ToString());
         pages = jNode["chapter"]["data"].AsArray();
         pageUrl = $"{jNode["baseUrl"]}/data/{jNode["chapter"]["hash"]}/";
 
@@ -107,6 +129,14 @@ public partial class ChapterPage : ContentPage
     {
         // TODO: Do this lamo
         return;
+    }
+
+    private void CreateChapterWebView(string url)
+    {
+        contentPage.Content = new WebView
+        {
+            Source = url
+        };
     }
 
     private int pageNumber = 0;

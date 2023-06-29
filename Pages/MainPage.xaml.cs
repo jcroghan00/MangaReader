@@ -50,7 +50,7 @@ public partial class MainPage : ContentPage
         var jNode = JsonNode.Parse(res.Content.ReadAsStream());
         popularNewManga = jNode["data"];
 
-        Random random = new Random();
+        Random random = new();
         SetPopularNew(random.Next(0, 10));
     }
 
@@ -560,7 +560,7 @@ public partial class MainPage : ContentPage
         ((Border)sender).BackgroundColor = (Color)App.Current.Resources["bgColor"];
     }
 
-    private void fromNewToPage(object sender, EventArgs e)
+    private void FromNewToPage(object sender, EventArgs e)
     {
         Tools.ToMangaPage(sender, e);
     }
