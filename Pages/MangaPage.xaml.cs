@@ -37,8 +37,8 @@ public partial class MangaPage : ContentPage
             GetMangaById(mangaId);
         }
     }
-        
 
+    private int chapterPage = 0;
 	private async void GetMangaById(string mangaId)
 	{
         var url = baseUrl
@@ -82,8 +82,9 @@ public partial class MangaPage : ContentPage
         hasLoaded = true;
     }
 
-    private async void GetMangaChapters(string mangaId, int offset)
+    private async void GetMangaChapters(string mangaId, int page)
     {
+        int offset = 50 * page;
         var url = baseUrl
             .AppendPathSegment($"manga/{mangaId}/feed")
             .SetQueryParam("limit", 50)
@@ -472,9 +473,9 @@ public partial class MangaPage : ContentPage
                 }
             }
 
-            PointerGestureRecognizer pointerGestureRecognizer = new();
-            pointerGestureRecognizer.PointerEntered += OnPointerEnterHighlight;
-            pointerGestureRecognizer.PointerExited += OnPointerExitHighlight;
+            PointerGestureRecognizer chapterGestureRecognizer = new();
+            chapterGestureRecognizer.PointerEntered += OnPointerEnterHighlight;
+            chapterGestureRecognizer.PointerExited += OnPointerExitHighlight;
             scanGroupLayout.Add(new Border
             {
                 Stroke = null,
@@ -484,7 +485,7 @@ public partial class MangaPage : ContentPage
                     CornerRadius = 5
                 },
                 Padding = new Thickness(5, 5, 5, 5),
-                GestureRecognizers = { scanGroup != "No Group" ? pointerGestureRecognizer : null },
+                GestureRecognizers = { scanGroup != "No Group" ? chapterGestureRecognizer : null },
                 Content = new Label
                 {
                     Text = scanGroup,
@@ -505,7 +506,7 @@ public partial class MangaPage : ContentPage
                     CornerRadius = 5
                 },
                 Padding = new Thickness(5, 5, 5, 5),
-                GestureRecognizers = { postUser != "No User" ? pointerGestureRecognizer : null },
+                GestureRecognizers = { postUser != "No User" ? chapterGestureRecognizer : null },
                 HorizontalOptions = LayoutOptions.End,
                 Content = new Label
                 {
@@ -520,6 +521,72 @@ public partial class MangaPage : ContentPage
             volumeLayout.Add(chapterBorder);
         }
         chapterStack.Add(volumeLayout);
+
+        Grid buttonGrid = new Grid
+        {
+            HorizontalOptions = LayoutOptions.Center,
+            ColumnDefinitions =
+            {
+                new ColumnDefinition{ Width = new GridLength(1, GridUnitType.Auto) },
+                new ColumnDefinition{ Width = new GridLength(1, GridUnitType.Auto) },
+                new ColumnDefinition{ Width = new GridLength(1, GridUnitType.Auto) }
+            }
+        };
+
+        PointerGestureRecognizer pointerGestureRecognizer = new PointerGestureRecognizer();
+        pointerGestureRecognizer.PointerEntered += OnPointerEnterTitle;
+        pointerGestureRecognizer.PointerExited += OnPointerExitTitle;
+
+        TapGestureRecognizer tapGestureDown = new TapGestureRecognizer();
+        tapGestureDown.Tapped += OnChapterPageDown;
+
+        Label downLabel = new Label
+        {
+            Text = "<",
+            GestureRecognizers = 
+            { 
+                pointerGestureRecognizer,
+                tapGestureDown
+            }
+        };
+
+        TapGestureRecognizer tapGestureUp = new TapGestureRecognizer();
+        tapGestureUp.Tapped += OnChapterPageUp;
+
+        Label upLabel = new Label
+        {
+            Text = ">",
+            GestureRecognizers =
+            {
+                pointerGestureRecognizer,
+                tapGestureUp
+            }
+        };
+
+        if (chapterPage != 0)
+        {
+            buttonGrid.Add(downLabel, 0, 0);
+            scrollView.ScrollToAsync(0, mangaInfoGrid.Height, true);
+        }
+
+        buttonGrid.Add(upLabel, 2, 0);
+
+        buttonGrid.Add(new Label
+        {
+            Text = (chapterPage + 1).ToString()
+        }, 1, 0);
+
+        chapterStack.Add(buttonGrid);
+    }
+
+    private void OnPointerEnterTitle(object sender, EventArgs e)
+    {
+        ((Label)sender).TextDecorations = TextDecorations.Underline;
+    }
+
+    private void OnPointerExitTitle(object sender, EventArgs e)
+    {
+        ((Label)sender).TextDecorations = TextDecorations.None;
     }
 
     private static void CreateAndAddDetail(Border overLayout, FlexLayout layout, List<string> input)
@@ -554,5 +621,17 @@ public partial class MangaPage : ContentPage
     private void OnPointerExitChapter(object sender, EventArgs e)
     {
         ((Border)sender).BackgroundColor = (Color)App.Current.Resources["hlColor"];
+    }
+
+    private void OnChapterPageDown(object sender, EventArgs e)
+    {
+        chapterPage -= 1;
+        GetMangaChapters(mangaId, chapterPage);
+    }
+
+    private void OnChapterPageUp(object sender, EventArgs e)
+    {
+        chapterPage += 1;
+        GetMangaChapters(mangaId, chapterPage);
     }
 }

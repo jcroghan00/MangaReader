@@ -9,7 +9,7 @@
         <VerticalStackLayout Margin="10, 50, 10, 50" MaximumWidthRequest="1500" Spacing="50">
             
             <!-- Upper Page Info -->
-            <Grid HeightRequest="500" ColumnDefinitions="*, 4*" RowDefinitions="Auto, *, Auto, .2*" RowSpacing="10" ColumnSpacing="10">
+            <Grid x:Name="mangaInfoGrid" HeightRequest="500" ColumnDefinitions="*, 4*" RowDefinitions="Auto, *, Auto, .2*" RowSpacing="10" ColumnSpacing="10">
                 <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" VerticalOptions="Center" HorizontalOptions="Center" StrokeShape="RoundRectangle 5" StrokeThickness="0" Stroke="{DynamicResource bgColor}" BackgroundColor="{DynamicResource bgColor}">
                     <Image x:Name="mangaCover"/>
                 </Border>
