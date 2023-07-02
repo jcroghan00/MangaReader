@@ -4,8 +4,9 @@ using Flurl;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Shapes;
 using System;
-using System.IO;
+using System.Collections.ObjectModel;
 using System.Text.Json.Nodes;
+using Image = Image;
 
 public partial class MainPage : ContentPage
 {
@@ -14,14 +15,14 @@ public partial class MainPage : ContentPage
 	static readonly string baseUrl = "https://api.mangadex.org/";
 	static readonly string coverBaseUrl = "https://uploads.mangadex.org/covers/";
 
-    private JsonNode popularNewManga;
-    private readonly byte[][] popularNewImages = new byte[10][];
+    private JsonArray popularNewManga;
+    readonly ObservableCollection<Grid> popularNew = new();
 
     public MainPage()
 	{
 		InitializeComponent();
 
-		GetPopularNew();
+        GetPopularNew();
         GetNewReleases();
 	}
 
@@ -48,123 +49,186 @@ public partial class MainPage : ContentPage
         res.EnsureSuccessStatusCode();
 
         var jNode = JsonNode.Parse(res.Content.ReadAsStream());
-        popularNewManga = jNode["data"];
+        popularNewManga = jNode["data"].AsArray();
 
-        Random random = new();
-        SetPopularNew(random.Next(0, 10));
+        SetPopularNew();
     }
 
     private int popularNewIndex = 0;
-	private void SetPopularNew(int offset)
+    private void SetPopularNew()
 	{
         if (popularNewManga == null)
         {
             return;
         }
 
-        popularNewIndex += offset;
 
-        if (popularNewIndex < 0)
+        for (int i = 0; i < popularNewManga.Count; i++)
         {
-            popularNewIndex = 9;
-        }
-        else if (popularNewIndex >= 10) 
-        {
-            popularNewIndex = 0;
+            TapGestureRecognizer tapGestureRecognizer = new TapGestureRecognizer();
+            tapGestureRecognizer.Tapped += FromNewToPage;
+            tapGestureRecognizer.CommandParameter = popularNewManga[i]["id"].ToString();
+
+            PointerGestureRecognizer pointerGestureRecognizer = new PointerGestureRecognizer();
+            pointerGestureRecognizer.PointerEntered += OnPointerEnterTitle;
+            pointerGestureRecognizer.PointerExited += OnPointerExitTitle;
+
+            Grid popularNewGrid = new()
+            {
+                HeightRequest = 500,
+                Padding = new Thickness(20, 10, 20, 10),
+                ColumnDefinitions =
+                {
+                    new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) },
+                    new ColumnDefinition { Width = new GridLength(3, GridUnitType.Star) }
+                },
+                RowDefinitions =
+                {
+                    new RowDefinition { Height = new GridLength(80) },
+                    new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) },
+                    new RowDefinition { Height = new GridLength(1, GridUnitType.Star) },
+                    new RowDefinition { Height = new GridLength(50) }
+                },
+                ColumnSpacing = 20,
+                RowSpacing = 20
+            };
+
+            // Add manga title to grid
+            popularNewGrid.Add(new Label
+            {
+                Text = popularNewManga[i]["attributes"]["title"]["en"].ToString(),
+                HorizontalOptions = LayoutOptions.Start,
+                VerticalOptions = LayoutOptions.Center,
+                FontSize = 30,
+                FontAttributes = FontAttributes.Bold,
+                LineBreakMode = LineBreakMode.TailTruncation,
+                GestureRecognizers =
+            {
+                tapGestureRecognizer,
+                pointerGestureRecognizer
+            }
+            }, 1, 0);
+
+            string popularNewDescriptionText = "No Description";
+            if (popularNewManga[i]["attributes"]["description"].ToString() != "{}")
+            {
+                popularNewDescriptionText = popularNewManga[i]["attributes"]["description"]["en"].ToString();
+            }
+
+            popularNewGrid.Add(new ScrollView
+            {
+                Content = new Label
+                {
+                    Text = popularNewDescriptionText,
+                    FontSize = 16,
+                    LineBreakMode = LineBreakMode.WordWrap
+                }
+            }, 1, 2);
+
+            string coverFileName = "";
+            var relations = popularNewManga[i]["relationships"].AsArray();
+
+            // < HorizontalStackLayout x: Name = "popularNewAuthorStack" Grid.Column = "0" HorizontalOptions = "Start" VerticalOptions = "Center" />
+            HorizontalStackLayout authorStack = new()
+            {
+                HorizontalOptions = LayoutOptions.Start,
+                VerticalOptions = LayoutOptions.Center
+            };
+
+            Label authorLabel = new();
+            // Filters through manga relations to get the authors/artists and cover art id
+            for (int j = 0; j < relations.Count; j++)
+            {
+
+                if (relations[j]["type"].ToString() == "author")
+                {
+                    string authorText = "";
+                    if (authorLabel.Text != null)
+                    {
+                        authorText = ", " + relations[j]["attributes"]["name"].ToString();
+                    }
+                    else
+                    {
+                        authorText = relations[j]["attributes"]["name"].ToString();
+                    }
+
+                    authorLabel = new Label
+                    {
+                        Text = authorText,
+                        Margin = new Thickness(0, 0, 0, 0),
+                        VerticalOptions = LayoutOptions.Start
+                    };
+
+                    authorStack.Add(authorLabel);
+                }
+                else if (relations[j]["type"].ToString() == "artist")
+                {
+                    NewArtist(relations[j]["attributes"]["name"].ToString(), authorLabel, authorStack);
+                }
+                else if (relations[j]["type"].ToString() == "cover_art")
+                {
+                    coverFileName = relations[j]["attributes"]["fileName"].ToString();
+                }
+            }
+
+            popularNewGrid.Add(authorStack, 1, 3);
+
+            var tags = popularNewManga[i]["attributes"]["tags"].AsArray();
+            HorizontalStackLayout popularNewTags = new()
+            {
+                Spacing = 15
+            };
+
+            // Adds a tag for the content rating of a manga if the manga is not 'safe'
+            if (popularNewManga[i]["attributes"]["contentRating"].ToString() != "safe")
+            {
+                Border newTag = Tools.MakeNewTag(popularNewManga[i]["attributes"]["contentRating"].ToString());
+                popularNewTags.Add(newTag);
+            }
+
+            // Create all tags for the manga
+            for (int j = 0; j < tags.Count; j++)
+            {
+                Border newTag = Tools.MakeNewTag(tags[j]["attributes"]["name"]["en"].ToString());
+                popularNewTags.Add(newTag);
+            }
+
+            popularNewGrid.Add(new ScrollView
+            {
+                Orientation = ScrollOrientation.Horizontal,
+                Padding = new Thickness(0, 0, 0, 15),
+                Content = popularNewTags
+            }, 1, 1);
+
+            var coverUrl = $"{coverBaseUrl}{popularNewManga[i]["id"]}/{coverFileName}.512.jpg";
+
+            Border border = new Border
+            {
+                Stroke = (Color)App.Current.Resources["fgColor"],
+                HorizontalOptions = LayoutOptions.Center,
+                VerticalOptions = LayoutOptions.Center,
+                StrokeShape = new RoundRectangle
+                {
+                    CornerRadius = 5
+                },
+                Content = new Image
+                {
+                    Source = ImageSource.FromUri(new Uri(coverUrl)),
+                    HorizontalOptions = LayoutOptions.Center,
+                    VerticalOptions = LayoutOptions.Center
+                }
+            };
+            Grid.SetRowSpan(border, 4);
+            popularNewGrid.Add(border, 0, 0);
+
+            popularNew.Add(popularNewGrid);
         }
 
-        // Retrieve stored image data
-        if (popularNewImages[popularNewIndex] != null)
-        {
-            popularNewImage.Source = ImageSource.FromStream(() => new MemoryStream(popularNewImages[popularNewIndex]));
-        }
-        else
-        {
-            popularNewImage.Source = "no_image.png";
-        }
-
-        // Clear old info
-        popularNewTags.Children.Clear();
-        popularNewAuthorStack.Children.Clear();
-
+        popularNewBorder.Content = popularNew[popularNewIndex];
         popularNewPageNumber.Text = (popularNewIndex + 1).ToString();
-        popularNewTitle.Text = popularNewManga[popularNewIndex]["attributes"]["title"]["en"].ToString();
-        popularNewTitleTapGesture.CommandParameter = popularNewManga[popularNewIndex]["id"].ToString();
 
-        if (popularNewManga[popularNewIndex]["attributes"]["description"].ToString() == "{}")
-        {
-            popularNewDescription.Text = "No Description";
-        }
-        else
-        {
-            popularNewDescription.Text = popularNewManga[popularNewIndex]["attributes"]["description"]["en"].ToString();
-        }
-
-        string coverFileName = "";
-        var relations = popularNewManga[popularNewIndex]["relationships"].AsArray();
-
-        Label authorLabel = new();
-        // Filters through manga relations to get the authors/artists and cover art id
-        for (int i = 0; i < relations.Count; i++)
-        {
-            
-            if (relations[i]["type"].ToString() == "author")
-            {
-                if (authorLabel.Text != null)
-                {
-                    authorLabel = new Label
-                    {
-                        Text = ", " + relations[i]["attributes"]["name"].ToString(),
-                        Margin = new Thickness(0, 0, 0, 0),
-                        VerticalOptions = LayoutOptions.Start
-                    };
-                }
-                else
-                {
-                    authorLabel = new Label
-                    {
-                        Text = relations[i]["attributes"]["name"].ToString(),
-                        Margin = new Thickness(0, 0, 0, 0),
-                        VerticalOptions = LayoutOptions.Start
-                    };
-                }
-                popularNewAuthorStack.Add(authorLabel);
-            }
-            else if (relations[i]["type"].ToString() == "artist")
-            {
-                NewArtist(relations[i]["attributes"]["name"].ToString(), authorLabel);
-            }
-            else if (relations[i]["type"].ToString() == "cover_art")
-            {
-                coverFileName = relations[i]["attributes"]["fileName"].ToString();
-            }
-        }
-
-        var tags = popularNewManga[popularNewIndex]["attributes"]["tags"].AsArray();
-
-        // Adds a tag for the content rating of a manga if the manga is not 'safe'
-        if (popularNewManga[popularNewIndex]["attributes"]["contentRating"].ToString() != "safe")
-        {
-            Border newTag = Tools.MakeNewTag(popularNewManga[popularNewIndex]["attributes"]["contentRating"].ToString());
-            popularNewTags.Add(newTag);
-        }
-
-        // Create all tags for the manga
-        for (int i = 0; i < tags.Count; i++)
-        {
-            Border newTag = Tools.MakeNewTag(tags[i]["attributes"]["name"]["en"].ToString());
-            popularNewTags.Add(newTag);
-        }
-
-        // Get new image data
-        if (popularNewImages[popularNewIndex] == null)
-        {
-            var coverUrl = $"{coverBaseUrl}{popularNewManga[popularNewIndex]["id"]}/{coverFileName}.512.jpg";
-            var byteArray = client.GetByteArrayAsync(coverUrl).Result;
-
-            popularNewImages[popularNewIndex] = byteArray;
-            popularNewImage.Source = ImageSource.FromStream(() => new MemoryStream(popularNewImages[popularNewIndex]));
-        }
+        //popularNewCarousel.ItemsSource = popularNew;
+        //popularNewCarousel.SetBinding(ItemsView.ItemsSourceProperty, "popularNew");
     }
 
     private async void GetNewReleases()
@@ -307,9 +371,13 @@ public partial class MainPage : ContentPage
                     {
                         mangaTitle = chapterRelations[j]["attributes"]["title"]["en"].ToString();
                     }
-                    else
+                    else if (chapterRelations[j]["attributes"]["title"]["ja"] != null)
                     {
                         mangaTitle = chapterRelations[j]["attributes"]["title"]["ja"].ToString();
+                    }
+                    else
+                    {
+                        mangaTitle = chapterRelations[j]["attributes"]["title"]["ja-ro"].ToString();
                     }
                     
                     mangaId = chapterRelations[j]["id"].ToString();
@@ -502,7 +570,7 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private void NewArtist(string name, Label author)
+    private void NewArtist(string name, Label author, HorizontalStackLayout authorStack)
     {
         if (name == author.Text)
         {
@@ -515,17 +583,34 @@ public partial class MainPage : ContentPage
             Margin = new Thickness(0, 0, 0, 0),
             VerticalOptions = LayoutOptions.Start
         };
-        popularNewAuthorStack.Add(label);
+        authorStack.Add(label);
+    }
+
+    private void ScrollPopularNew(int offset)
+    {
+        popularNewIndex += offset;
+
+        if (popularNewIndex >= popularNew.Count)
+        {
+            popularNewIndex = 0;
+        }
+        else if (popularNewIndex < 0)
+        {
+            popularNewIndex = popularNew.Count - 1;
+        }
+
+        popularNewBorder.Content = popularNew[popularNewIndex];
+        popularNewPageNumber.Text = (popularNewIndex + 1).ToString();
     }
 
     private void ScrollPopularNewRight(object sender, EventArgs e)
     {
-        SetPopularNew(1);
+        ScrollPopularNew(1);
     }
 
     private void ScrollPopularNewLeft(object sender, EventArgs e)
     {
-        SetPopularNew(-1);
+        ScrollPopularNew(-1);
     }
 
     private void OnPointerEnterTitle(object sender, EventArgs e)

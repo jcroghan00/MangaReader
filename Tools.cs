@@ -6,16 +6,16 @@ namespace MangaReader
     {
         public static Border MakeNewTag(string tag)
         {
-            string text = tag;
+            string text = tag[0].ToString().ToUpper() + tag[1..];
+
             Color backgroundColor = (Color)App.Current.Resources["hlColor"];
 
             if (tag == "suggestive" || tag == "erotica")
             {
-                text = tag[0].ToString().ToUpper() + tag.Substring(1);
                 backgroundColor = (Color)App.Current.Resources[tag + "BgColor"];
             }
 
-            Border border = new Border
+            Border border = new()
             {
                 BackgroundColor = backgroundColor,
                 Stroke = backgroundColor,
@@ -38,8 +38,9 @@ namespace MangaReader
 
         public static async void ToChapterPage(object sender, EventArgs e)
         {
-            string chapterId = ((TappedEventArgs)e).Parameter.ToString();
-            await Shell.Current.GoToAsync($"ChapterPage?chapterId={chapterId}");
+            string chapterId = ((List<string>)((TappedEventArgs)e).Parameter)[0];
+            string longStrip = ((List<string>)((TappedEventArgs)e).Parameter)[1];
+            await Shell.Current.GoToAsync($"ChapterPage?chapterId={chapterId}&longStrip={longStrip}");
         }
     }
 }

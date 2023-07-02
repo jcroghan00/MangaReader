@@ -8,55 +8,26 @@
         <VerticalStackLayout Margin="0, 50, 0, 50" MaximumWidthRequest="1500" Spacing="50">
 
             <!-- Popular New Manga -->
-            <VerticalStackLayout>
+            <VerticalStackLayout x:Name="popularNewStack">
                 <Label Text="Popular New Titles" Margin="0, 0, 0, 10" FontSize="40"/>
-                <Frame CornerRadius="10" Padding="0" BorderColor="{DynamicResource fgColor}">
-                    <Grid BackgroundColor="{DynamicResource fgColor}" ColumnDefinitions="*, 4*" RowDefinitions="80, Auto, *, 50" HeightRequest="500" Padding="20, 10, 20, 10" ColumnSpacing="20" RowSpacing="20">
-                        <Border StrokeShape="RoundRectangle 5" Stroke="{DynamicResource fgColor}" Grid.Column="0" Grid.Row="0" Grid.RowSpan="4" HorizontalOptions="Center" VerticalOptions="Center">
-                            <Image x:Name="popularNewImage" Source="no_image.png" HorizontalOptions="Center" VerticalOptions="Center">
-                                <Image.GestureRecognizers>
-                                    
-                                </Image.GestureRecognizers>
-                            </Image>
-                        </Border>
-                        <Label x:Name="popularNewTitle" Text="No Title" HorizontalOptions="Start" VerticalOptions="Center" Grid.Column="1" Grid.Row="0" FontSize="30" FontAttributes="Bold" LineBreakMode="TailTruncation">
-                            <Label.GestureRecognizers>
-                                <TapGestureRecognizer x:Name="popularNewTitleTapGesture" Tapped="FromNewToPage"/>
-                                <PointerGestureRecognizer PointerEntered="OnPointerEnterTitle" PointerExited="OnPointerExitTitle"/>
-                            </Label.GestureRecognizers>
-                        </Label>
-                        <ScrollView Orientation="Horizontal" Grid.Column="1" Grid.Row="1" Padding="0, 0, 0, 15" >
-                            <HorizontalStackLayout x:Name="popularNewTags" Spacing="15"/>
-                        </ScrollView>
-                        <ScrollView Grid.Column="1" Grid.Row="2" >
-                            <Label x:Name="popularNewDescription" Text="No Description" FontSize="16" LineBreakMode="WordWrap"/>
-                        </ScrollView>
-                        <Grid Grid.Column="1" Grid.Row="3" ColumnDefinitions="*, Auto" RowDefinitions="*" >
-                            <HorizontalStackLayout x:Name="popularNewAuthorStack" Grid.Column="0" HorizontalOptions="Start" VerticalOptions="Center"/>
-                            <Grid ColumnDefinitions="Auto, *, Auto" RowDefinitions="50" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center">
-                                <Border Grid.Row="0" Grid.Column="0" VerticalOptions="Center" BackgroundColor="{DynamicResource hlColor}" Stroke="{DynamicResource hlColor}" StrokeShape="RoundRectangle 10">
-                                    <Label Text="&lt;" VerticalOptions="Center" HorizontalOptions="Center" HeightRequest="40" WidthRequest="40" VerticalTextAlignment="Center" HorizontalTextAlignment="Center">
-                                        <Label.GestureRecognizers>
-                                            <TapGestureRecognizer Tapped="ScrollPopularNewLeft"/>
-                                            <PointerGestureRecognizer PointerEntered="OnPointerEnterButton" PointerExited="OnPointerExitButton"/>
-                                        </Label.GestureRecognizers>
-                                    </Label>
-                                </Border>
-                                <Label Grid.Row="0" Grid.Column="1" x:Name="popularNewPageNumber" Text="#" HorizontalOptions="Center" VerticalOptions="Center" FontSize="16" WidthRequest="40" HorizontalTextAlignment="Center"/>
-                                <Border Grid.Row="0" Grid.Column="2" VerticalOptions="Center" BackgroundColor="{DynamicResource hlColor}" Stroke="{DynamicResource hlColor}" StrokeShape="RoundRectangle 10">
-                                    <Label Text="&gt;" VerticalOptions="Center" HorizontalOptions="Center" HeightRequest="40" WidthRequest="40" VerticalTextAlignment="Center" HorizontalTextAlignment="Center">
-                                        <Label.GestureRecognizers>
-                                            <TapGestureRecognizer Tapped="ScrollPopularNewRight"/>
-                                            <PointerGestureRecognizer PointerEntered="OnPointerEnterButton" PointerExited="OnPointerExitButton"/>
-                                        </Label.GestureRecognizers>
-                                    </Label>
-                                </Border>
-                            </Grid>
-                        </Grid>
-                    </Grid>
-                </Frame>
+                <Border x:Name="popularNewBorder" StrokeThickness="0" Stroke="{DynamicResource fgColor}" BackgroundColor="{DynamicResource fgColor}" StrokeShape="RoundRectangle 10"/>
+                <HorizontalStackLayout HorizontalOptions="Center">
+                    <Label Text="&lt;" FontSize="20" Padding="10, 10, 10, 10">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="ScrollPopularNewLeft"/>
+                            <PointerGestureRecognizer PointerEntered="OnPointerEnterTitle" PointerExited="OnPointerExitTitle"/>
+                        </Label.GestureRecognizers>
+                    </Label>
+                    <Label x:Name="popularNewPageNumber" Text="#" FontSize="20" Padding="0, 10, 0, 10"/>
+                    <Label Text="&gt;" FontSize="20" Padding="10, 10, 10, 10">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="ScrollPopularNewRight"/>
+                            <PointerGestureRecognizer PointerEntered="OnPointerEnterTitle" PointerExited="OnPointerExitTitle"/>
+                        </Label.GestureRecognizers>
+                    </Label>
+                </HorizontalStackLayout>
+                <!-- <CarouselView x:Name="popularNewCarousel" ItemsSource="{x:Static local:MangaReader.MainPage.popularNew}"/> -->
             </VerticalStackLayout>
-
             <!-- New Chapter Releases -->
             <VerticalStackLayout>
                 <Label Text="Latest Updates" Margin="0, 0, 0, 10" FontSize="30"/>

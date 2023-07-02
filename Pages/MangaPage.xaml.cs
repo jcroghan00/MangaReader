@@ -103,17 +103,22 @@ public partial class MangaPage : ContentPage
         SetMangaChapters(jNode["data"]);
     }
 
+    private bool longstrip = false;
     private void SetMangaElements(JsonNode manga)
     {
         if (manga["attributes"]["title"]["en"] != null)
         {
             mangaTitle.Text = manga["attributes"]["title"]["en"].ToString();
         }
-        else
+        else if (manga["attributes"]["title"]["ja"] != null)
         {
             mangaTitle.Text = manga["attributes"]["title"]["ja"].ToString();
         }
-        
+        else
+        {
+            mangaTitle.Text = manga["attributes"]["title"]["ja-ro"].ToString();
+        }
+
         if (manga["attributes"]["description"].ToString() == "{}")
         {
             mangaDescription.Text = "No Description";
@@ -159,6 +164,10 @@ public partial class MangaPage : ContentPage
             }
             else if (tags[i]["attributes"]["group"].ToString() == "format")
             {
+                if (tags[i]["attributes"]["name"]["en"].ToString() == "Long Strip")
+                {
+                    longstrip = true;
+                }
                 formats.Add(tags[i]["attributes"]["name"]["en"].ToString());
             }
         }
@@ -270,7 +279,14 @@ public partial class MangaPage : ContentPage
 
     private void SetMangaStats(JsonNode stats)
     {
-        mangaScore.Text = $"☆ {Math.Round(float.Parse(stats[mangaId]["rating"]["average"].ToString()), 2, MidpointRounding.ToEven)}";
+        if (stats[mangaId]["rating"]["average"] == null)
+        {
+            mangaScore.Text = "No Score";
+        }
+        else
+        {
+            mangaScore.Text = $"☆ {Math.Round(float.Parse(stats[mangaId]["rating"]["average"].ToString()), 2, MidpointRounding.ToEven)}";
+        }
     }
 
     private void SetMangaChapters(JsonNode chaptersNode)
@@ -335,7 +351,10 @@ public partial class MangaPage : ContentPage
 
             TapGestureRecognizer tapGestureRecognizer = new();
             tapGestureRecognizer.Tapped += Tools.ToChapterPage;
-            tapGestureRecognizer.CommandParameter = chapters[i]["id"].ToString();
+            tapGestureRecognizer.CommandParameter = new List<string> {
+                chapters[i]["id"].ToString(),
+                longstrip.ToString()
+             };
 
             PointerGestureRecognizer chapterPointerGestureRecognizer = new();
             chapterPointerGestureRecognizer.PointerEntered += OnPointerEnterChapter;

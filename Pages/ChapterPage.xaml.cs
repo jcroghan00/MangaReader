@@ -8,6 +8,7 @@ namespace MangaReader;
 public partial class ChapterPage : ContentPage
 {
     static readonly string baseUrl = "https://api.mangadex.org/";
+    private int pageWidth = 1500;
 
     private string chapterId = "No ID";
     public string ChapterId
@@ -19,8 +20,8 @@ public partial class ChapterPage : ContentPage
         }
     }
 
-    private bool longStrip = false;
-    public bool LongStrip
+    private string longStrip = "False";
+    public string LongStrip
     {
         get => longStrip;
         set
@@ -76,11 +77,10 @@ public partial class ChapterPage : ContentPage
 
         // TODO: Add an option to use data-saver images because oh lord the ram usage
         var jNode = JsonNode.Parse(res.Content.ReadAsStream());
-        Debug.WriteLine(jNode.ToString());
         pages = jNode["chapter"]["data"].AsArray();
         pageUrl = $"{jNode["baseUrl"]}/data/{jNode["chapter"]["hash"]}/";
 
-        if (longStrip)
+        if (longStrip == "True")
         {
             CreateChapterImagesLongstrip();
         }
@@ -100,34 +100,73 @@ public partial class ChapterPage : ContentPage
             Margin = new Thickness(0, 10, 0, 10),
             FontSize = 20
         };
-        imageGrid.Add(numberLabel);
+
+        imageGrid.Add(numberLabel, 1, 0);
         for (int i = 0; i < pages.Count; i++)
         {
-            TapGestureRecognizer nextGestureRecognizer = new();
-            nextGestureRecognizer.Tapped += NextPage;
-
             chapterImages.Add(new Image
             {
                 IsVisible = (i == 0),
-                WidthRequest = 1500,
+                WidthRequest = pageWidth,
+                Source = new UriImageSource
+                {
+                    Uri = new Uri($"{pageUrl}{pages[i]}"),
+                    CachingEnabled = false
+                }
+            });
+
+            imageGrid.Add(chapterImages[i], 1, 1);
+        }
+
+        TapGestureRecognizer nextGestureRecognizer = new();
+        nextGestureRecognizer.Tapped += NextPage;
+
+        TapGestureRecognizer lastGestureRecognizer = new();
+        lastGestureRecognizer.Tapped += LastPage;
+
+        Label lastLabel = new Label 
+        { 
+            WidthRequest = 3000,
+            BindingContext = imageGrid.Height,
+            GestureRecognizers =
+            {
+                lastGestureRecognizer
+            }
+        };
+
+        Label nextLabel = new Label
+        {
+            WidthRequest = 3000,
+            BindingContext = imageGrid.Height,
+            GestureRecognizers =
+            {
+                nextGestureRecognizer
+            }
+        };
+
+        buttonGrid.Add(lastLabel, 0, 0);
+        buttonGrid.Add(nextLabel, 1, 0);
+    }
+
+    private void CreateChapterImagesLongstrip()
+    {
+        VerticalStackLayout chapterImageStack = new();
+
+        for (int i = 0; i < pages.Count; i++)
+        {
+            chapterImageStack.Add(new Image
+            {
+                WidthRequest = pageWidth,
                 Source = new UriImageSource
                 {
                     Uri = new Uri($"{pageUrl}{pages[i]}"),
                     CachingEnabled = false
                 },
-                GestureRecognizers =
-                {
-                    nextGestureRecognizer
-                }
             });
-
-            imageGrid.Add(chapterImages[i], 0, 1);
         }
-    }
 
-    private void CreateChapterImagesLongstrip()
-    {
-        // TODO: Do this lamo
+        scrollView.Content = chapterImageStack;
+
         return;
     }
 
@@ -143,7 +182,7 @@ public partial class ChapterPage : ContentPage
     private readonly List<Image> chapterImages = new();
     private async void SwitchPage(int numPages)
     {
-        if (pageNumber + numPages >= pages.Count)
+        if (pageNumber + numPages >= pages.Count || pageNumber + numPages < 0)
         {
             await Navigation.PopAsync();
             return;
@@ -161,5 +200,10 @@ public partial class ChapterPage : ContentPage
     private void NextPage(object sender, EventArgs e)
     {
         SwitchPage(1);
+    }
+
+    private void LastPage(object sender, EventArgs e)
+    {
+        SwitchPage(-1);
     }
 }
