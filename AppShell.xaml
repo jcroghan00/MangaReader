@@ -19,8 +19,8 @@
 
     <FlyoutItem Title="Search">
         <ShellContent 
-            ContentTemplate="{DataTemplate local:MainPage}"
-            Route="MainPage" />
+            ContentTemplate="{DataTemplate local:SearchPage}"
+            Route="SearchPage" />
     </FlyoutItem>
 
     <FlyoutItem Title="Updates">

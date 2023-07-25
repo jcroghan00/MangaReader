@@ -10,7 +10,11 @@
             <!-- Popular New Manga -->
             <VerticalStackLayout x:Name="popularNewStack">
                 <Label Text="Popular New Titles" Margin="0, 0, 0, 10" FontSize="40"/>
-                <Border x:Name="popularNewBorder" StrokeThickness="0" Stroke="{DynamicResource fgColor}" BackgroundColor="{DynamicResource fgColor}" StrokeShape="RoundRectangle 10"/>
+                <Border x:Name="popularNewBorder" StrokeThickness="0" Stroke="{DynamicResource fgColor}" BackgroundColor="{DynamicResource fgColor}" StrokeShape="RoundRectangle 10">
+                    <Border.Shadow>
+                        <Shadow Radius="15"/>
+                    </Border.Shadow>
+                </Border>
                 <HorizontalStackLayout HorizontalOptions="Center">
                     <Label Text="&lt;" FontSize="20" Padding="10, 10, 10, 10">
                         <Label.GestureRecognizers>
@@ -28,10 +32,14 @@
                 </HorizontalStackLayout>
                 <!-- <CarouselView x:Name="popularNewCarousel" ItemsSource="{x:Static local:MangaReader.MainPage.popularNew}"/> -->
             </VerticalStackLayout>
+            
             <!-- New Chapter Releases -->
             <VerticalStackLayout>
                 <Label Text="Latest Updates" Margin="0, 0, 0, 10" FontSize="30"/>
-                <Frame CornerRadius="10" Padding="0" BackgroundColor="{DynamicResource fgColor}" BorderColor="{DynamicResource fgColor}">
+                <Border StrokeShape="RoundRectangle 10" Padding="0" BackgroundColor="{DynamicResource fgColor}" Stroke="{DynamicResource fgColor}" StrokeThickness="0">
+                    <Border.Shadow>
+                        <Shadow Brush="{DynamicResource dropShadow}" Radius="15"/>
+                    </Border.Shadow>
                     <Grid BackgroundColor="{DynamicResource fgColor}" ColumnDefinitions="*, *, *" ColumnSpacing="20" RowDefinitions="*" HeightRequest="600" Padding="30, 15, 30, 15">
                         <Border StrokeThickness="0" StrokeShape="RoundRectangle 5" Stroke="{DynamicResource hlColor}" Grid.Column="0">
                             <VerticalStackLayout x:Name="newChapterStack1" BackgroundColor="{DynamicResource hlColor}" Grid.Column="0" Padding="5, 7.5, 5, 7.5"/>
@@ -43,7 +51,7 @@
                             <VerticalStackLayout x:Name="newChapterStack3" BackgroundColor="{DynamicResource hlColor}" Grid.Column="2" Padding="5, 7.5, 5, 7.5"/>
                         </Border>
                     </Grid>
-                </Frame>
+                </Border>
             </VerticalStackLayout>
 
             <!-- Seasonal Manga -->
