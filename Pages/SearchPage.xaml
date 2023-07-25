@@ -5,11 +5,14 @@
              Title="SearchPage"
              BackgroundColor="{DynamicResource bgColor}">
 
-    <VerticalStackLayout x:Name="verticalStack" MaximumWidthRequest="1500" Margin="10, 50, 10, 50">
-        <Label Text="Search Manga" Margin="0, 20, 0, 20" FontSize="30" FontAttributes="Bold"/>
-        <Entry BackgroundColor="{DynamicResource fgColor}"
+    <ScrollView>
+        <VerticalStackLayout x:Name="verticalStack" MaximumWidthRequest="1500" Margin="10, 50, 10, 50">
+            <Label Text="Search Manga" Margin="0, 20, 0, 20" FontSize="30" FontAttributes="Bold"/>
+            <Entry BackgroundColor="{DynamicResource fgColor}"
                Placeholder="Enter Title"
-               Completed="OnEntryCompleted" />
-        <FlexLayout x:Name="resultFlex" />
-    </VerticalStackLayout>
+               Completed="OnEntryCompleted"
+               ClearButtonVisibility="WhileEditing"/>
+            <VerticalStackLayout x:Name="resultVertical" Margin="0, 20, 0, 20" Spacing="20"/>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

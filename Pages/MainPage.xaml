@@ -38,7 +38,7 @@
                 <Label Text="Latest Updates" Margin="0, 0, 0, 10" FontSize="30"/>
                 <Border StrokeShape="RoundRectangle 10" Padding="0" BackgroundColor="{DynamicResource fgColor}" Stroke="{DynamicResource fgColor}" StrokeThickness="0">
                     <Border.Shadow>
-                        <Shadow Brush="{DynamicResource dropShadow}" Radius="15"/>
+                        <Shadow Radius="15"/>
                     </Border.Shadow>
                     <Grid BackgroundColor="{DynamicResource fgColor}" ColumnDefinitions="*, *, *" ColumnSpacing="20" RowDefinitions="*" HeightRequest="600" Padding="30, 15, 30, 15">
                         <Border StrokeThickness="0" StrokeShape="RoundRectangle 5" Stroke="{DynamicResource hlColor}" Grid.Column="0">
