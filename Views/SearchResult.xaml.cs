@@ -30,8 +30,8 @@ public partial class SearchResult : ContentView
             Padding = new Thickness(10, 10, 10, 10),
             ColumnDefinitions =
                 {
-                    new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) },
-                    new ColumnDefinition { Width = new GridLength(8, GridUnitType.Star) }
+                    new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) },
+                    new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }
                 },
             RowDefinitions =
                 {
@@ -57,7 +57,14 @@ public partial class SearchResult : ContentView
         string descriptionText = "No Description";
         if (manga["attributes"]["description"].ToString() != "{}")
         {
-            descriptionText = manga["attributes"]["description"]["en"].ToString();
+            if (manga["attributes"]["description"]["en"] != null)
+            {
+                descriptionText = manga["attributes"]["description"]["en"].ToString();
+            }
+            else if (manga["attributes"]["description"]["ja"] != null)
+            {
+                descriptionText = manga["attributes"]["description"]["ja"].ToString();
+            }
         }
 
         grid.Add(new Label

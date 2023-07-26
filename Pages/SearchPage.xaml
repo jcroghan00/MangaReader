@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="MangaReader.SearchPage"
              Title="SearchPage"
-             BackgroundColor="{DynamicResource bgColor}">
+             BackgroundColor="{DynamicResource bgColor}"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit">
 
     <ScrollView>
         <VerticalStackLayout x:Name="verticalStack" MaximumWidthRequest="1500" Margin="10, 50, 10, 50">
@@ -11,7 +12,36 @@
             <Entry BackgroundColor="{DynamicResource fgColor}"
                Placeholder="Enter Title"
                Completed="OnEntryCompleted"
-               ClearButtonVisibility="WhileEditing"/>
+               ClearButtonVisibility="WhileEditing">
+                <Entry.Keyboard>
+                    <Keyboard x:FactoryMethod="Create">
+                        <x:Arguments>
+                            <KeyboardFlags>Suggestions,CapitalizeWord</KeyboardFlags>
+                        </x:Arguments>
+                    </Keyboard>
+                </Entry.Keyboard>
+            </Entry>
+
+            <toolkit:Expander Margin="0, 5, 0, 0" HorizontalOptions="End" MaximumHeightRequest="1500">
+                <toolkit:Expander.Header>
+                    <Label Text="Advanced Options"
+                        FontSize="14"
+                        Margin="0, 0, 0, 5"
+                        HorizontalOptions="End">
+                        <Label.GestureRecognizers>
+                            <PointerGestureRecognizer PointerEntered="OnPointerEnterOptions" PointerExited="OnPointerExitOptions"/>
+                        </Label.GestureRecognizers>
+                    </Label>
+                </toolkit:Expander.Header>
+                <Border StrokeThickness="0" Stroke="{DynamicResource fgColor}" BackgroundColor="{DynamicResource fgColor}" StrokeShape="RoundRectangle 10" Padding="5, 5, 5, 5" MaximumWidthRequest="1500">
+                    <Border.Content>
+                        <FlexLayout x:Name="optionFlex" Wrap="Wrap">
+                            
+                        </FlexLayout>
+                    </Border.Content>
+                </Border>
+            </toolkit:Expander>
+
             <VerticalStackLayout x:Name="resultVertical" Margin="0, 20, 0, 20" Spacing="20"/>
         </VerticalStackLayout>
     </ScrollView>

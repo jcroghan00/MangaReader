@@ -1,15 +1,14 @@
 ﻿namespace MangaReader;
 
 using Flurl;
+using MangaReader.Views;
 using Microsoft.Maui.Controls;
-using Microsoft.Maui.Controls.Shapes;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 [QueryProperty(nameof(MangaId), "mangaId")]
 public partial class MangaPage : ContentPage
 {
-    private bool hasLoaded = false;
 	private string mangaId = "No ID";
 	public string MangaId
 	{
@@ -28,18 +27,8 @@ public partial class MangaPage : ContentPage
 		InitializeComponent();
 	}
 
-    protected override void OnAppearing()
-    {
-        base.OnAppearing();
-
-        if (!hasLoaded)
-        {
-            GetMangaById(mangaId);
-        }
-    }
-
     private int chapterPage = 0;
-	private async void GetMangaById(string mangaId)
+	private async void GetMangaById()
 	{
         var url = baseUrl
             .AppendPathSegment("manga")
@@ -55,7 +44,7 @@ public partial class MangaPage : ContentPage
         SetMangaElements(manga);
     }
 
-    private async void GetMangaStats(string mangaId)
+    private async void GetMangaStats()
     {
         var url = baseUrl.AppendPathSegment($"statistics/manga/{mangaId}");
 
@@ -70,24 +59,22 @@ public partial class MangaPage : ContentPage
 
     private void OnPageLoaded(object sender, EventArgs e)
     {
-        if (!hasLoaded)
-        {
-            var content = scrollView.Content;
-            scrollView.Content = null;
-            scrollView.Content = content;
+        var content = scrollView.Content;
+        scrollView.Content = null;
+        scrollView.Content = content;
 
-            GetMangaStats(mangaId);
-            GetMangaChapters(mangaId, 0);
-        }
-        hasLoaded = true;
+        GetMangaById();
+        GetMangaStats();
+        SetMangaChapters();
     }
 
-    private async void GetMangaChapters(string mangaId, int page)
+    int totalChapterEntries;
+    private async Task<JsonNode> GetMangaChapters()
     {
-        int offset = 50 * page;
+        int offset = 25 * chapterPage;
         var url = baseUrl
             .AppendPathSegment($"manga/{mangaId}/feed")
-            .SetQueryParam("limit", 50)
+            .SetQueryParam("limit", 25)
             .SetQueryParam("offset", offset)
             .SetQueryParam("translatedLanguage[]", new[] { "en" })
             .SetQueryParam("contentRating[]", new[] {"safe", "suggestive", "erotica"})
@@ -100,7 +87,9 @@ public partial class MangaPage : ContentPage
         res.EnsureSuccessStatusCode();
 
         var jNode = JsonNode.Parse(res.Content.ReadAsStream());
-        SetMangaChapters(jNode["data"]);
+        totalChapterEntries = Int32.Parse(jNode["total"].ToString());
+
+        return jNode["data"];
     }
 
     private bool longstrip = false;
@@ -289,17 +278,28 @@ public partial class MangaPage : ContentPage
         }
     }
 
-    private void SetMangaChapters(JsonNode chaptersNode)
+    private async void SetMangaChapters()
     {
         if (chapterPage != 0)
         {
-            scrollView.ScrollToAsync(0, mangaInfoGrid.Height, true);
+            await scrollView.ScrollToAsync(0, mangaInfoGrid.Height, true);
         }
 
         chapterStack.Children.Clear();
+        chapterStack.Add(new Image
+        {
+            Source = "loading_cat.gif",
+            IsAnimationPlaying = true,
+            HorizontalOptions = LayoutOptions.Center,
+            MaximumHeightRequest = 300
+        });
+
+        JsonNode chaptersNode = await GetMangaChapters();
+        chapterStack.Children.Clear();
+        
         var chapters = chaptersNode.AsArray();
 
-        if (chapters.Count == 0 )
+        if (chapters.Count == 0)
         {
             chapterStack.Add(new Label
             {
@@ -349,202 +349,7 @@ public partial class MangaPage : ContentPage
                 });
             }
 
-            TapGestureRecognizer tapGestureRecognizer = new();
-            tapGestureRecognizer.Tapped += Tools.ToChapterPage;
-            tapGestureRecognizer.CommandParameter = new List<string> {
-                chapters[i]["id"].ToString(),
-                longstrip.ToString()
-             };
-
-            PointerGestureRecognizer chapterPointerGestureRecognizer = new();
-            chapterPointerGestureRecognizer.PointerEntered += OnPointerEnterChapter;
-            chapterPointerGestureRecognizer.PointerExited += OnPointerExitChapter;
-
-            Border chapterBorder = new()
-            {
-                Stroke = (Color)App.Current.Resources["hlColor"],
-                BackgroundColor = (Color)App.Current.Resources["hlColor"],
-                Padding = new Thickness(10, 10, 10, 10),
-                GestureRecognizers =
-                {
-                    chapterPointerGestureRecognizer,
-                    tapGestureRecognizer
-                },
-                StrokeShape = new RoundRectangle
-                {
-                    CornerRadius = 5
-                }
-            };
-
-            Grid chapterGrid = new()
-            {
-                ColumnDefinitions = {
-                        new ColumnDefinition(),
-                        new ColumnDefinition{ Width = new GridLength(1, GridUnitType.Auto) }
-                    },
-                RowDefinitions =
-                    {
-                        new RowDefinition(),
-                        new RowDefinition()
-                    },
-                RowSpacing = 5
-            };
-
-            string chapterTitle = "Oneshot";
-
-            if (chapters[i]["attributes"]["chapter"] != null)
-            {
-                chapterTitle = $"Ch. {chapters[i]["attributes"]["chapter"]}";
-            }
-
-            chapterTitle += chapters[i]["attributes"]["title"] != null ? $" - {chapters[i]["attributes"]["title"]}" : "";
-
-            chapterGrid.Add(new Label
-            {
-                Text = chapterTitle,
-                Margin = new Thickness(5, 5, 0, 0),
-                FontSize = 14
-            }, 0, 0);
-
-            DateTime readableAt = DateTime.Parse(chapters[i]["attributes"]["readableAt"].ToString());
-            TimeSpan timeDifference = DateTime.Now - readableAt;
-
-            string timeReadable = "No Time Readable";
-            if (timeDifference.TotalDays / 365.2425 >= 1)
-            {
-                timeReadable = (int)(timeDifference.TotalDays / 365.2425) == 1 ? (int)(timeDifference.TotalDays / 365.2425) + " Year Ago" : (int)(timeDifference.TotalDays / 365.2425) + " Years Ago";
-            }
-            else if (timeDifference.TotalDays / 30.437 >= 1)
-            {
-                timeReadable = (int)(timeDifference.TotalDays / 30.437) == 1 ? (int)(timeDifference.TotalDays / 30.437) + " Month Ago" : (int)(timeDifference.TotalDays / 30.437) + " Months Ago";
-            }
-            else if (timeDifference.Days > 0)
-            {
-                timeReadable = timeDifference.Days == 1 ? timeDifference.Days.ToString() + " Day Ago" : timeDifference.Days.ToString() + " Days Ago";
-            }
-            else if (timeDifference.Hours > 0)
-            {
-                timeReadable = timeDifference.Hours == 1 ? timeDifference.Hours.ToString() + " Hour Ago" : timeDifference.Hours.ToString() + " Hours Ago";
-            }
-            else if (timeDifference.Minutes > 0)
-            {
-                timeReadable = timeDifference.Minutes == 1 ? timeDifference.Minutes.ToString() + " Minute Ago" : timeDifference.Minutes.ToString() + " Minutes Ago";
-            }
-            else if (timeDifference.Seconds > 0)
-            {
-                timeReadable = timeDifference.Seconds == 1 ? timeDifference.Seconds.ToString() + " Second Ago" : timeDifference.Seconds.ToString() + " Seconds Ago";
-            }
-
-            chapterGrid.Add(new Label {
-                Text = timeReadable,
-                HorizontalTextAlignment = TextAlignment.End,
-                FontSize = 14
-            }, 1, 0);
-
-            var chapterRelations = chapters[i]["relationships"].AsArray();
-
-            string postUser = "No User";
-            string scanGroup = "No Group";
-
-            HorizontalStackLayout scanGroupLayout = new()
-            {
-                Spacing = 5,
-                VerticalOptions = LayoutOptions.Center,
-                HorizontalOptions = LayoutOptions.Start
-            };
-
-            FontAttributes scanGroupAttributes = FontAttributes.Italic;
-
-            for (int j = 0; j < chapterRelations.Count; j++)
-            {
-                if (chapterRelations[j]["type"].ToString() == "user")
-                {
-                    if (chapterRelations[j]["attributes"]["username"] != null)
-                    {
-                        postUser = chapterRelations[j]["attributes"]["username"].ToString();
-                    }
-                }
-                else if (chapterRelations[j]["type"].ToString() == "scanlation_group")
-                {
-                    if (scanGroup != "No Group")
-                    {
-                        PointerGestureRecognizer scanGroupPointer = new();
-                        scanGroupPointer.PointerEntered += OnPointerEnterHighlight;
-                        scanGroupPointer.PointerExited += OnPointerExitHighlight;
-                        scanGroupLayout.Add(new Border
-                        {
-                            Stroke = null,
-                            BackgroundColor = null,
-                            StrokeShape = new RoundRectangle
-                            {
-                                CornerRadius = 5
-                            },
-                            Padding = new Thickness(5, 5, 5, 5),
-                            GestureRecognizers =
-                            {
-                                    scanGroupPointer
-                            },
-                            Content = new Label
-                            {
-                                Text = scanGroup,
-                                FontAttributes = scanGroupAttributes,
-                                LineBreakMode = LineBreakMode.TailTruncation,
-                                FontSize = 14
-                            }
-                        });
-                    }
-
-                    scanGroup = chapterRelations[j]["attributes"]["name"].ToString();
-                    scanGroupAttributes = FontAttributes.None;
-                }
-            }
-
-            PointerGestureRecognizer chapterGestureRecognizer = new();
-            chapterGestureRecognizer.PointerEntered += OnPointerEnterHighlight;
-            chapterGestureRecognizer.PointerExited += OnPointerExitHighlight;
-            scanGroupLayout.Add(new Border
-            {
-                Stroke = null,
-                BackgroundColor = null,
-                StrokeShape = new RoundRectangle
-                {
-                    CornerRadius = 5
-                },
-                Padding = new Thickness(5, 5, 5, 5),
-                GestureRecognizers = { scanGroup != "No Group" ? chapterGestureRecognizer : null },
-                Content = new Label
-                {
-                    Text = scanGroup,
-                    FontAttributes = scanGroupAttributes,
-                    LineBreakMode = LineBreakMode.TailTruncation,
-                    FontSize = 14
-                }
-            });
-
-            chapterGrid.Add(scanGroupLayout, 0, 1);
-
-            chapterGrid.Add(new Border
-            {
-                Stroke = null,
-                BackgroundColor = null,
-                StrokeShape = new RoundRectangle
-                {
-                    CornerRadius = 5
-                },
-                Padding = new Thickness(5, 5, 5, 5),
-                GestureRecognizers = { postUser != "No User" ? chapterGestureRecognizer : null },
-                HorizontalOptions = LayoutOptions.End,
-                Content = new Label
-                {
-                    Text = postUser,
-                    LineBreakMode = LineBreakMode.TailTruncation,
-                    HorizontalTextAlignment = TextAlignment.End,
-                    FontSize = 14
-                }
-            }, 1, 1);
-
-            chapterBorder.Content = chapterGrid;
-            volumeLayout.Add(chapterBorder);
+            volumeLayout.Add(new ChapterEntry(chapters[i], longstrip.ToString()));
         }
         chapterStack.Add(volumeLayout);
 
@@ -554,6 +359,8 @@ public partial class MangaPage : ContentPage
             ColumnSpacing = 10,
             ColumnDefinitions =
             {
+                new ColumnDefinition{ Width = new GridLength(1, GridUnitType.Auto) },
+                new ColumnDefinition{ Width = new GridLength(1, GridUnitType.Auto) },
                 new ColumnDefinition{ Width = new GridLength(1, GridUnitType.Auto) },
                 new ColumnDefinition{ Width = new GridLength(1, GridUnitType.Auto) },
                 new ColumnDefinition{ Width = new GridLength(1, GridUnitType.Auto) }
@@ -590,18 +397,53 @@ public partial class MangaPage : ContentPage
             }
         };
 
+        TapGestureRecognizer tapGestureFirst = new();
+        tapGestureFirst.Tapped += OnChapterFirstPage;
+
+        Label firstLabel = new()
+        {
+            Text = "<<",
+            GestureRecognizers =
+            {
+                pointerGestureRecognizer,
+                tapGestureFirst
+            }
+        };
+
+        TapGestureRecognizer tapGestureLast = new();
+        tapGestureLast.Tapped += OnChapterLastPage;
+
+        Label lastLabel = new()
+        {
+            Text = ">>",
+            GestureRecognizers =
+            {
+                pointerGestureRecognizer,
+                tapGestureLast
+            }
+        };
+
         if (chapterPage != 0)
         {
-            buttonGrid.Add(downLabel, 0, 0);
+            buttonGrid.Add(downLabel, 1, 0);
+            if (chapterPage > 1)
+            {
+                buttonGrid.Add(firstLabel, 0, 0);
+            }
         }
-        if (chapters.Count >= 50)
+        if ((chapterPage + 1) * 25 < totalChapterEntries)
         {
-            buttonGrid.Add(upLabel, 2, 0);
+            buttonGrid.Add(upLabel, 3, 0);
+            if ((chapterPage + 2) * 25 < totalChapterEntries)
+            {
+                buttonGrid.Add(lastLabel, 4, 0);
+            }
         }
+
         buttonGrid.Add(new Label
         {
             Text = (chapterPage + 1).ToString()
-        }, 1, 0);
+        }, 2, 0);
 
         chapterStack.Add(buttonGrid);
     }
@@ -630,35 +472,27 @@ public partial class MangaPage : ContentPage
         }
     }
 
-    private void OnPointerEnterHighlight(object sender, EventArgs e)
-    {
-        ((Border)sender).BackgroundColor = (Color)App.Current.Resources["hlColor"];
-    }
-
-    private void OnPointerExitHighlight(object sender, EventArgs e)
-    {
-        ((Border)sender).BackgroundColor = null;
-    }
-
-    private void OnPointerEnterChapter(object sender, EventArgs e)
-    {
-        ((Border)sender).BackgroundColor = (Color)App.Current.Resources["fgColor"];
-    }
-
-    private void OnPointerExitChapter(object sender, EventArgs e)
-    {
-        ((Border)sender).BackgroundColor = (Color)App.Current.Resources["hlColor"];
-    }
-
     private void OnChapterPageDown(object sender, EventArgs e)
     {
         chapterPage -= 1;
-        GetMangaChapters(mangaId, chapterPage);
+        SetMangaChapters();
     }
 
     private void OnChapterPageUp(object sender, EventArgs e)
     {
         chapterPage += 1;
-        GetMangaChapters(mangaId, chapterPage);
+        SetMangaChapters();
+    }
+
+    private void OnChapterLastPage(object sender, EventArgs e)
+    {
+        chapterPage = totalChapterEntries / 25;
+        SetMangaChapters();
+    }
+
+    private void OnChapterFirstPage(object sender, EventArgs e)
+    {
+        chapterPage = 0;
+        SetMangaChapters();
     }
 }

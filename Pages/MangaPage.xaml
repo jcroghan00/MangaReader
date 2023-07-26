@@ -15,7 +15,7 @@
                 </Border>
                 <Label x:Name="mangaTitle"  Margin="0, 15, 0, 0"  Grid.Column="1" Grid.Row="0" FontAttributes="Bold" FontSize="30"/>
                 <HorizontalStackLayout x:Name="authorStack" Grid.Column="1" Grid.Row="1"/>
-                <FlexLayout x:Name="mangaTags" Margin="0, 0, 0, 25" Grid.Column="1" Grid.Row="2" Wrap="Wrap" Direction="Row"/>
+                <FlexLayout x:Name="mangaTags" Margin="0, 0, 0, 25" Grid.Column="1" Grid.Row="2" Wrap="Wrap" Direction="Row" AlignItems="End"/>
                 <HorizontalStackLayout Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="2" HorizontalOptions="Center" VerticalOptions="Center" Spacing="20">
                     <Label x:Name="mangaScore" FontSize="16"/>
                     <Label x:Name="mangaPublicationStatus" FontSize="16"/>

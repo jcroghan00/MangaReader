@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MangaReader.Views.ChapterEntry"
+             Loaded="OnViewLoaded">
+
+    <Border Stroke="{DynamicResource hlColor}" BackgroundColor="{DynamicResource hlColor}" Padding="10, 10, 10, 10" StrokeShape="RoundRectangle 5">
+        <Border.GestureRecognizers>
+            <TapGestureRecognizer x:Name="tapGestureRecognizer"/>
+            <PointerGestureRecognizer PointerEntered="OnPointerEnterChapter" PointerExited="OnPointerExitChapter"/>
+        </Border.GestureRecognizers>
+        <Grid ColumnDefinitions="Auto, *" RowDefinitions="*, *" RowSpacing="5">
+            <Label x:Name="chapterTitleLabel" Margin="5, 5, 0, 0" FontSize="14" Grid.Column="0" Grid.Row="0"/>
+            <Label x:Name="chapterReadableLabel" HorizontalTextAlignment="End" FontSize="14" Grid.Column="1" Grid.Row="0"/>
+            <HorizontalStackLayout x:Name="scanGroupLayout" Spacing="5" VerticalOptions="Center" HorizontalOptions="Start" Grid.Column="0" Grid.Row="1"/>
+            <Border x:Name="userBorder" StrokeThickness="0" StrokeShape="RoundRectangle 5" Padding="5, 5, 5, 5" HorizontalOptions="End" Grid.Column="1" Grid.Row="1">
+                <Label x:Name="userLabel" LineBreakMode="TailTruncation" HorizontalTextAlignment="End" FontSize="14"/>
+            </Border>
+        </Grid>
+    </Border>
+</ContentView>

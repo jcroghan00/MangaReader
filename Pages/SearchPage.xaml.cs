@@ -1,7 +1,6 @@
 using MangaReader.Views;
 using System.Text.Json.Nodes;
 using Flurl;
-using System.Diagnostics;
 
 namespace MangaReader;
 
@@ -54,10 +53,20 @@ public partial class SearchPage : ContentPage
         }
 	}
 
-	/*
+    /*
     private void OnEntryTextChanged(object sender, EventArgs e)
 	{
         verticalStack.Add(new SearchResult(((Entry)sender).Text));
     }
 	*/
+
+    private void OnPointerEnterOptions(object sender, EventArgs e)
+    {
+        ((Label)sender).TextDecorations = TextDecorations.Underline;
+    }
+
+    private void OnPointerExitOptions(object sender, EventArgs e)
+    {
+        ((Label)sender).TextDecorations = TextDecorations.None;
+    }
 }

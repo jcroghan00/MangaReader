@@ -20,11 +20,16 @@ namespace MangaReader
                 BackgroundColor = backgroundColor,
                 Stroke = backgroundColor,
                 StrokeThickness = 1,
+                Padding = new Thickness(0, 0, 0, 0),
                 StrokeShape = new RoundRectangle
                 {
                     CornerRadius = 10
                 },
-                Content = new Label { Text = text, Margin = new Thickness(15, 5, 15, 5) }
+                Content = new Label { 
+                    Text = text, 
+                    Margin = new Thickness(15, 5, 15, 5),
+                    VerticalOptions = LayoutOptions.Center
+                }
             };
 
             return border;
