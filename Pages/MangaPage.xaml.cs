@@ -103,9 +103,13 @@ public partial class MangaPage : ContentPage
         {
             mangaTitle.Text = manga["attributes"]["title"]["ja"].ToString();
         }
-        else
+        else if (manga["attributes"]["title"]["ja-ro"] != null)
         {
             mangaTitle.Text = manga["attributes"]["title"]["ja-ro"].ToString();
+        }
+        else
+        {
+            mangaTitle.Text = manga["attributes"]["title"]["ko"].ToString();
         }
 
         if (manga["attributes"]["description"].ToString() == "{}")

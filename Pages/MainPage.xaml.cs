@@ -375,9 +375,13 @@ public partial class MainPage : ContentPage
                     {
                         mangaTitle = chapterRelations[j]["attributes"]["title"]["ja"].ToString();
                     }
-                    else
+                    else if (chapterRelations[j]["attributes"]["title"]["ja-ro"] != null)
                     {
                         mangaTitle = chapterRelations[j]["attributes"]["title"]["ja-ro"].ToString();
+                    }
+                    else
+                    {
+                        mangaTitle = chapterRelations[j]["attributes"]["title"]["ko"].ToString();
                     }
                     
                     mangaId = chapterRelations[j]["id"].ToString();

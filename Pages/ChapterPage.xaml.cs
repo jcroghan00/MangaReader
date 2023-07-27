@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Text.Json.Nodes;
 
 namespace MangaReader;
@@ -8,7 +7,7 @@ namespace MangaReader;
 public partial class ChapterPage : ContentPage
 {
     static readonly string baseUrl = "https://api.mangadex.org/";
-    private int pageWidth = 1500;
+    private double pageScale = 0.7;
 
     private string chapterId = "No ID";
     public string ChapterId
@@ -37,7 +36,9 @@ public partial class ChapterPage : ContentPage
     public ChapterPage()
 	{
 		InitializeComponent();
-	}
+
+        contentPage.SizeChanged += OnPageResize;
+    }
 
     protected override void OnAppearing()
     {
@@ -91,8 +92,11 @@ public partial class ChapterPage : ContentPage
     }
 
     Label numberLabel;
+    bool isImagesCreated = false;
     private void CreateChapterImagesPaged()
     {
+        isImagesCreated = true;
+
         numberLabel = new Label
         {
             Text = $"1/{pages.Count}",
@@ -104,16 +108,21 @@ public partial class ChapterPage : ContentPage
         imageGrid.Add(numberLabel, 1, 0);
         for (int i = 0; i < pages.Count; i++)
         {
-            chapterImages.Add(new Image
+            Image image = new Image
             {
                 IsVisible = (i == 0),
-                WidthRequest = pageWidth,
+                MaximumWidthRequest = contentPage.Width * pageScale,
+                MinimumWidthRequest = 600,
                 Source = new UriImageSource
                 {
                     Uri = new Uri($"{pageUrl}{pages[i]}"),
                     CachingEnabled = false
                 }
-            });
+            };
+            //image.SetBinding(Image.MaximumWidthRequestProperty, new Binding("Value", source: contentPage));
+            chapterImages.Add(image);
+
+            // chapterImages[i].WidthRequest = chapterImages[0].Width * (0.5);
 
             imageGrid.Add(chapterImages[i], 1, 1);
         }
@@ -150,19 +159,23 @@ public partial class ChapterPage : ContentPage
 
     private void CreateChapterImagesLongstrip()
     {
+        isImagesCreated = true;
+
         VerticalStackLayout chapterImageStack = new();
 
         for (int i = 0; i < pages.Count; i++)
         {
-            chapterImageStack.Add(new Image
+            chapterImages.Add(new Image
             {
-                WidthRequest = pageWidth,
+                MaximumWidthRequest = contentPage.Width * pageScale,
+                MinimumWidthRequest = 600,
                 Source = new UriImageSource
                 {
                     Uri = new Uri($"{pageUrl}{pages[i]}"),
                     CachingEnabled = false
                 },
             });
+            chapterImageStack.Add(chapterImages[i]);
         }
 
         scrollView.Content = chapterImageStack;
@@ -205,5 +218,15 @@ public partial class ChapterPage : ContentPage
     private void LastPage(object sender, EventArgs e)
     {
         SwitchPage(-1);
+    }
+
+    private void OnPageResize(object sender, EventArgs e)
+    {
+        if (!isImagesCreated) { return; }
+
+        for (int i = 0; i < pages.Count; i++)
+        {
+            chapterImages[i].MaximumWidthRequest = contentPage.Width * pageScale;
+        }
     }
 }

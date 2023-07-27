@@ -7,8 +7,8 @@
              BackgroundColor="{DynamicResource bgColor}">
 
     <ScrollView x:Name="scrollView">
-        <Grid>
-            <Grid x:Name="imageGrid" ColumnDefinitions="*, 1500, *" RowDefinitions="Auto, *" Margin="0,0,0,50"/>
+        <Grid >
+            <Grid x:Name="imageGrid" ColumnDefinitions="*, Auto, *" RowDefinitions="Auto, *" Margin="0,0,0,50"/>
             <Grid x:Name="buttonGrid" ColumnDefinitions="*, *"/>
         </Grid>
     </ScrollView>
