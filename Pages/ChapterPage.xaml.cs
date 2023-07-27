@@ -119,10 +119,7 @@ public partial class ChapterPage : ContentPage
                     CachingEnabled = false
                 }
             };
-            //image.SetBinding(Image.MaximumWidthRequestProperty, new Binding("Value", source: contentPage));
             chapterImages.Add(image);
-
-            // chapterImages[i].WidthRequest = chapterImages[0].Width * (0.5);
 
             imageGrid.Add(chapterImages[i], 1, 1);
         }

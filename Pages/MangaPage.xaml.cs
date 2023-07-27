@@ -3,6 +3,7 @@
 using Flurl;
 using MangaReader.Views;
 using Microsoft.Maui.Controls;
+using System.Diagnostics;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
@@ -59,9 +60,9 @@ public partial class MangaPage : ContentPage
 
     private void OnPageLoaded(object sender, EventArgs e)
     {
-        var content = scrollView.Content;
-        scrollView.Content = null;
-        scrollView.Content = content;
+        // var content = scrollView.Content;
+        // scrollView.Content = null;
+        // scrollView.Content = content;
 
         GetMangaById();
         GetMangaStats();
@@ -112,21 +113,77 @@ public partial class MangaPage : ContentPage
             mangaTitle.Text = manga["attributes"]["title"]["ko"].ToString();
         }
 
+        string mangaDescriptionText;
         if (manga["attributes"]["description"].ToString() == "{}")
         {
-            mangaDescription.Text = "No Description";
+            mangaDescriptionText = "No Description";
         }
         else
         {
             if (manga["attributes"]["description"]["en"] != null)
             {
-                mangaDescription.Text = manga["attributes"]["description"]["en"].ToString();
+                mangaDescriptionText = manga["attributes"]["description"]["en"].ToString();
             }
             else
             {
-                mangaDescription.Text = manga["attributes"]["description"]["ja"].ToString();
+                mangaDescriptionText = manga["attributes"]["description"]["ja"].ToString();
             }
         }
+
+        // <Label x:Name="mangaDescription" FontSize="16" LineBreakMode="WordWrap"/>
+        // Parse the description for links to hyperlink
+        var linkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        FormattedString formattedString = new FormattedString();
+        int lastIndex = 0;
+        foreach (Match m in linkParser.Matches(mangaDescriptionText))
+        {
+            string linkUrl = m.Value.ToString();
+            int linkIndex = m.Index;
+
+            string firstPart = mangaDescriptionText.Substring(lastIndex, linkIndex - lastIndex - 2);
+            int bracketIndex = firstPart.LastIndexOf("[");
+
+            formattedString.Spans.Add(new Span { Text = firstPart.Substring(0, bracketIndex) });
+
+            string linkText = firstPart.Substring(bracketIndex + 1, firstPart.Length - (bracketIndex + 1));
+
+            // This may one day actually function but unfortunately gesture recognizers don't work on spans. It's a bug in .net MAUI and has been fixed on Android and iOS already.
+            // The link to the issue is https://github.com/dotnet/maui/issues/4734
+            TapGestureRecognizer linkTap = new();
+            linkTap.Tapped += OpenBrowserWithLink;
+            linkTap.CommandParameter = linkUrl;
+
+            // PointerGestureRecognizer linkPoint = new();
+            // linkPoint.PointerEntered += OnPointerEnterTitle;
+            // linkPoint.PointerExited += OnPointerExitTitle;
+
+            formattedString.Spans.Add(new Span
+            {
+                Text = linkText,
+                TextColor = Color.FromArgb("#ea00ff"),
+                GestureRecognizers =
+                {
+                    linkTap,
+                }
+            });
+
+            lastIndex = linkIndex + linkUrl.Length + 1;
+        }
+
+        TapGestureRecognizer testGesture = new();
+        testGesture.Tapped += Test;
+
+        formattedString.Spans.Add(new Span { Text = mangaDescriptionText.Substring(lastIndex, mangaDescriptionText.Length -  lastIndex) });   
+        mangaDescription.Content = new Label
+        {
+            FontSize = 16,
+            LineBreakMode = LineBreakMode.WordWrap,
+            GestureRecognizers =
+            {
+
+            },
+            FormattedText = formattedString
+        };
 
         // Adds a tag for the content rating of a manga if the manga is not 'safe'
         if (manga["attributes"]["contentRating"].ToString() != "safe")
@@ -498,5 +555,24 @@ public partial class MangaPage : ContentPage
     {
         chapterPage = 0;
         SetMangaChapters();
+    }
+
+    private async void OpenBrowserWithLink(object sender, EventArgs e)
+    {
+        string linkUrl = ((TappedEventArgs)e).Parameter.ToString();
+        try
+        {
+            Uri uri = new Uri(linkUrl);
+            await Browser.Default.OpenAsync(uri, BrowserLaunchMode.SystemPreferred);
+        }
+        catch (Exception ex)
+        {
+            // An unexpected error occurred. No browser may be installed on the device.
+        }
+    }
+
+    private void Test(object sender, EventArgs e)
+    {
+        return;
     }
 }

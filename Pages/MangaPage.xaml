@@ -23,9 +23,7 @@
             </Grid>
             
             <!-- Description Box -->
-            <Frame CornerRadius="10" BorderColor="{DynamicResource hlColor}" BackgroundColor="{DynamicResource fgColor}">
-                <Label x:Name="mangaDescription" FontSize="16" LineBreakMode="WordWrap"/>
-            </Frame>
+            <Border x:Name="mangaDescription" StrokeShape="RoundRectangle 10" StrokeThickness="0" Stroke="{DynamicResource hlColor}" BackgroundColor="{DynamicResource fgColor}" Padding="10, 10, 10, 10"/>
             
             <!-- Bottom Page Info -->
             <Grid ColumnDefinitions="350, 3*" ColumnSpacing="10" RowDefinitions="Auto, Auto">
