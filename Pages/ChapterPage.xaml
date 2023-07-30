@@ -7,8 +7,14 @@
              BackgroundColor="{DynamicResource bgColor}">
 
     <ScrollView x:Name="scrollView">
-        <Grid >
-            <Grid x:Name="imageGrid" ColumnDefinitions="*, Auto, *" RowDefinitions="Auto, *" Margin="0,0,0,50"/>
+        <Grid>
+            <Grid x:Name="imageGrid" ColumnDefinitions="*, Auto, *" RowDefinitions="Auto, *" Margin="0,0,0,50">
+                <Grid RowDefinitions="Auto" ColumnDefinitions="*, Auto, *" Margin="0, 10, 0, 10" Grid.Column="1">
+                    <Label x:Name="chapterLabel" HorizontalOptions="Start" FontSize="20" Grid.Column="0"/>
+                    <Label x:Name="numberLabel" HorizontalOptions="Center" FontSize="20" Grid.Column="1"/>
+                    <Label x:Name="groupLabel" HorizontalOptions="End" FontSize="20" Grid.Column="2"/>
+                </Grid>
+            </Grid>
             <Grid x:Name="buttonGrid" ColumnDefinitions="*, *"/>
         </Grid>
     </ScrollView>

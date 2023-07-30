@@ -410,7 +410,7 @@ public partial class MangaPage : ContentPage
                 });
             }
 
-            volumeLayout.Add(new ChapterEntry(chapters[i], longstrip.ToString()));
+            volumeLayout.Add(new ChapterEntry(chapters[i], longstrip.ToString(), mangaId));
         }
         chapterStack.Add(volumeLayout);
 

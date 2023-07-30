@@ -45,7 +45,8 @@ namespace MangaReader
         {
             string chapterId = ((List<string>)((TappedEventArgs)e).Parameter)[0];
             string longStrip = ((List<string>)((TappedEventArgs)e).Parameter)[1];
-            await Shell.Current.GoToAsync($"ChapterPage?chapterId={chapterId}&longStrip={longStrip}");
+            string mangaId = ((List<string>)((TappedEventArgs)e).Parameter)[2];
+            await Shell.Current.GoToAsync($"ChapterPage?mangaId={mangaId}&chapterId={chapterId}&longStrip={longStrip}");
         }
     }
 }

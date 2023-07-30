@@ -7,13 +7,15 @@ public partial class ChapterEntry : ContentView
 {
     JsonNode chapter;
     string longstrip;
+    string mangaId;
 
-	public ChapterEntry(JsonNode chapter, string longstrip)
+	public ChapterEntry(JsonNode chapter, string longstrip, string mangaId)
 	{
 		InitializeComponent();
 
         this.chapter = chapter;
         this.longstrip = longstrip;
+        this.mangaId = mangaId;
 	}
 
 	private void OnViewLoaded(object sender, EventArgs e)
@@ -21,7 +23,8 @@ public partial class ChapterEntry : ContentView
         tapGestureRecognizer.Tapped += Tools.ToChapterPage;
         tapGestureRecognizer.CommandParameter = new List<string> {
                 chapter["id"].ToString(),
-                longstrip
+                longstrip,
+                mangaId
              };
 
         string chapterTitle = "Oneshot";

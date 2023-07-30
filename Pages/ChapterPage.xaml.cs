@@ -1,13 +1,25 @@
+using Flurl;
 using System.Text.Json.Nodes;
 
 namespace MangaReader;
 
+[QueryProperty(nameof(MangaId), "mangaId")]
 [QueryProperty(nameof(ChapterId), "chapterId")]
 [QueryProperty(nameof(LongStrip), "longStrip")]
 public partial class ChapterPage : ContentPage
 {
     static readonly string baseUrl = "https://api.mangadex.org/";
     private double pageScale = 0.7;
+
+    private string mangaId = "No ID";
+    public string MangaId
+    {
+        get => mangaId;
+        set
+        {
+            mangaId = value;
+        }
+    }
 
     private string chapterId = "No ID";
     public string ChapterId
@@ -49,7 +61,7 @@ public partial class ChapterPage : ContentPage
 
     private async void GetChapterById(string id)
     {
-        var url = $"{baseUrl}chapter/{id}";
+        var url = $"{baseUrl}chapter/{id}".SetQueryParam("includes[]", new[] { "scanlation_group" });
 
         HttpRequestMessage msg = new(HttpMethod.Get, url);
         HttpResponseMessage res = await MainPage.client.SendAsync(msg);
@@ -70,6 +82,7 @@ public partial class ChapterPage : ContentPage
 
     private async void GetChapterPagesById(string id)
     {
+        chapterImages.Clear();
         var url = $"{baseUrl}at-home/server/{id}";
 
         HttpRequestMessage msg = new(HttpMethod.Get, url);
@@ -81,6 +94,28 @@ public partial class ChapterPage : ContentPage
         pages = jNode["chapter"]["data"].AsArray();
         pageUrl = $"{jNode["baseUrl"]}/data/{jNode["chapter"]["hash"]}/";
 
+        string chapterNumberText = "";
+        chapterNumberText += chapter["attributes"]["volume"] == null ? "" : $"Vol. {chapter["attributes"]["volume"]} ";
+        chapterNumberText += $"Ch. {chapter["attributes"]["chapter"]}";
+        chapterNumberText += chapter["attributes"]["title"] == null ? "" : $" - {chapter["attributes"]["title"]} ";
+        chapterLabel.Text = chapterNumberText;
+
+        string groupText = "No Group";
+        FontAttributes fontAttributes = FontAttributes.Italic;
+
+        JsonArray relations = chapter["relationships"].AsArray();
+        for (int i = 0; i <  relations.Count; i++)
+        {
+            if (relations[i]["type"].ToString() == "scanlation_group")
+            {
+                groupText = relations[i]["attributes"]["name"].ToString();
+                fontAttributes = FontAttributes.None;
+            }
+        }
+
+        groupLabel.Text = groupText;
+        groupLabel.FontAttributes = fontAttributes;
+
         if (longStrip == "True")
         {
             CreateChapterImagesLongstrip();
@@ -91,26 +126,19 @@ public partial class ChapterPage : ContentPage
         }
     }
 
-    Label numberLabel;
     bool isImagesCreated = false;
     private void CreateChapterImagesPaged()
     {
         isImagesCreated = true;
 
-        numberLabel = new Label
-        {
-            Text = $"1/{pages.Count}",
-            HorizontalOptions = LayoutOptions.Center,
-            Margin = new Thickness(0, 10, 0, 10),
-            FontSize = 20
-        };
+        numberLabel.IsVisible = true;
+        numberLabel.Text = $"{pageNumber + 1}/{pages.Count}";
 
-        imageGrid.Add(numberLabel, 1, 0);
         for (int i = 0; i < pages.Count; i++)
         {
             Image image = new Image
             {
-                IsVisible = (i == 0),
+                IsVisible = (i == pageNumber),
                 MaximumWidthRequest = contentPage.Width * pageScale,
                 MinimumWidthRequest = 600,
                 Source = new UriImageSource
@@ -156,6 +184,7 @@ public partial class ChapterPage : ContentPage
 
     private void CreateChapterImagesLongstrip()
     {
+        numberLabel.IsVisible = false;
         isImagesCreated = true;
 
         VerticalStackLayout chapterImageStack = new();
@@ -192,19 +221,84 @@ public partial class ChapterPage : ContentPage
     private readonly List<Image> chapterImages = new();
     private async void SwitchPage(int numPages)
     {
+        chapterImages[pageNumber].IsVisible = false;
+
         if (pageNumber + numPages >= pages.Count || pageNumber + numPages < 0)
         {
-            await Navigation.PopAsync();
+            SetChapterByNumber(numPages);
             return;
         }
 
-        chapterImages[pageNumber].IsVisible = false;
         pageNumber += numPages;
         chapterImages[pageNumber].IsVisible = true;
 
         numberLabel.Text = $"{pageNumber + 1}/{pages.Count}";
 
         await scrollView.ScrollToAsync(0, numberLabel.Height + 20, true);
+    }
+
+    private async void SetChapterByNumber(int direction)
+    {
+        pageNumber = 0;
+        numberLabel.IsVisible = false;
+
+        JsonArray chapterArray = await GetChapterByNumber(Int32.Parse(chapter["attributes"]["chapter"].ToString()) + direction);
+
+        if (chapterArray.Count == 0)
+        {
+            await Navigation.PopAsync();
+        }
+
+        string group = "No Group";
+        for (int i = 0; i < chapter["relationships"].AsArray().Count; i++)
+        {
+            if (chapter["relationships"].AsArray()[i]["type"].ToString() == "scanlation_group")
+            {
+                group = chapter["relationships"].AsArray()[i]["id"].ToString();
+            }
+        }
+
+        for (int i = 0; i < chapterArray.Count; i++)
+        {
+            JsonArray relationships = chapterArray[i]["relationships"].AsArray();
+            for (int j = 0; j < relationships.Count; j++)
+            {
+                if (relationships[j]["type"].ToString() == "scanlation_group")
+                {
+                    if (relationships[j]["id"].ToString() == group)
+                    {
+                        chapter = chapterArray[i];
+                        GetChapterPagesById(chapterArray[i]["id"].ToString());
+                        return;
+                    }
+                }
+            }
+        }
+
+        await scrollView.ScrollToAsync(0, 0, true);
+
+        chapter = chapterArray[0];
+        GetChapterPagesById(chapterArray[0]["id"].ToString());
+        return;
+    }
+
+    private async Task<JsonArray> GetChapterByNumber(int chapterNumber)
+    {
+        var url = baseUrl
+            .AppendPathSegment("chapter")
+            .SetQueryParam("manga", mangaId)
+            .SetQueryParam("chapter", chapterNumber)
+            .SetQueryParam("contentRating[]", new[] { "safe", "suggestive", "erotica" })
+            .SetQueryParam("translatedLanguage[]", new[] { "en" })
+            .SetQueryParam("includes[]", new[] { "scanlation_group" });
+
+        HttpRequestMessage msg = new(HttpMethod.Get, url);
+        HttpResponseMessage res = await MainPage.client.SendAsync(msg);
+        res.EnsureSuccessStatusCode();
+
+        var jNode = JsonNode.Parse(res.Content.ReadAsStream());
+        JsonArray chapters = jNode["data"].AsArray();
+        return chapters;
     }
 
     private void NextPage(object sender, EventArgs e)
